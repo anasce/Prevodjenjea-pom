@@ -1,0 +1,12 @@
+unique_ids:
+  assets:
+    replace_e0.0.0.1.py: '1784734543296912948412109.3347'
+    theme.css: A2Y5M3X5RBU4JFSFIRU7NFJG264JXM63
+  forms:
+    Form1: 5BUBJHESCXTENLWFAJ7TAVH3N7UIUBTR
+    Layouts.BaseLayout: PKYE26KMMY5DASM4RPP3DPRA7YJ6RS7J
+  modules:
+    Layouts: NKF6DTYMFZUBZLPVJ7K4MLMWVAKPCPTV
+  scripts: {}
+  server_modules:
+    ServerModule1: '178474156170681523592898.69904'

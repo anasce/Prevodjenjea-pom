@@ -1,0 +1,15 @@
+allow_embedding: false
+correct_dependency_ids: {}
+dependencies: []
+metadata: {description: Ijekavizacija ekavskog teksta, logo_img: 'https://cdn-icons-png.flaticon.com/128/6983/6983445.png', title: Prevođenje}
+name: Clone of Prevođenje ei
+package_name: Prevo_enje_ei
+runtime_options:
+  client_version: '3'
+  server_spec: {base: python310-minimal}
+  version: 3
+services:
+- client_config: {enable_v2: true}
+  server_config: {}
+  source: /runtime/services/tables.yml
+startup: {module: Form1, type: form}
