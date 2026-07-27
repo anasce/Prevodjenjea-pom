@@ -366,12 +366,11 @@ def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     if izvorna.istitle(): return zamjena.capitalize() + sufiks
     return zamjena + sufiks
 
-
 def _primijeni_exact(tekst):
     for pat, e, i in _EXACT:
         def _r(m):
             s = m.group(0)
-            return s if (s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
+            return s if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
         tekst = pat.sub(_r, tekst)
     return tekst
 
@@ -379,7 +378,7 @@ def _primijeni_stems(tekst):
     for pat, e, i in _STEMS:
         def _r(m):
             s, suf = m.group(1), m.group(2)
-            return m.group(0) if (s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i, suf)
+            return m.group(0) if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i, suf)
         tekst = pat.sub(_r, tekst)
     return tekst
 
@@ -393,7 +392,7 @@ def _primijeni_kontekst_prozor(tekst):
             m = _stem(korijen).match(rijec)
             if m:
                 s, suf = m.group(1), m.group(2)
-                if s[0].isupper() and not da_li_je_pocetak_recenice(tekst, len("".join(tokeni[:t_idx]))): continue
+                if s.isupper() and not da_li_je_pocetak_recenice(tekst, len("".join(tokeni[:t_idx]))): continue
                 
                 prozor = [tokeni[idx_p[j]].lower() for j in range(max(0, i-3), i)] + [tokeni[idx_p[j]].lower() for j in range(i+1, min(len(idx_p), i+4))]
                 okolina = " ".join(prozor)
@@ -406,6 +405,11 @@ def _primijeni_kontekst_prozor(tekst):
 
 def zamijeni_rijeci(tekst):
     return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
+
+def obradi_datoteku(ulaz, izlaz):
+    if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
+    with open(ulaz, encoding="utf-8") as f: t = f.read()
+    with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
