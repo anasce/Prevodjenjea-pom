@@ -1,6 +1,11 @@
 import sys, os, re 
 import anvil.server
 
+
+import sys, os, re 
+import anvil.server
+
+
 EXACT = [
   
   ('razboleo', 'razbolio'),
@@ -346,9 +351,16 @@ STEMS = [
  
 ]
 
-KONTEKST = [
-    ('sed', 'sijed', ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv'], 
-           'sjed', ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć'])
+
+# KONTEKST sada radi sa tačnim mapiranjem celih reči bez rizičnog sečenja sufiksa
+KONTEKST_MAPE = [
+    {
+        'ekavski': [ 'sede', 'sedi', 'seda'],
+        'ako_je_grupa1': 'sijed',  # npr. sijeda
+        'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv'],
+        'ako_je_grupa2': 'sjed',   # npr. sjedi
+        'kljucevi2': ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć']
+    }
 ]
 
 def _wb(word): return re.compile(r'(?<![^\W\d_])' + re.escape(word) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
@@ -388,23 +400,36 @@ def _primijeni_kontekst_prozor(tekst):
     
     for i, t_idx in enumerate(idx_p):
         rijec = tokeni[t_idx]
-        for korijen, z1, klj1, z2, klj2 in KONTEKST:
-            m = _stem(korijen).match(rijec)
-            if m:
-                s, suf = m.group(1), m.group(2)
-                if s.isupper() and not da_li_je_pocetak_recenice(tekst, len("".join(tokeni[:t_idx]))): continue
-                
+        rijec_lower = rijec.lower()
+        
+        for mapa in KONTEKST_MAPE:
+            if rijec_lower in mapa['ekavski']:
+                # Pronalaženje okoline (3 reči pre i posle)
                 prozor = [tokeni[idx_p[j]].lower() for j in range(max(0, i-3), i)] + [tokeni[idx_p[j]].lower() for j in range(i+1, min(len(idx_p), i+4))]
                 okolina = " ".join(prozor)
-                skor1 = sum(len(re.findall(re.escape(k), okolina)) for k in klj1)
-                skor2 = sum(len(re.findall(re.escape(k), okolina)) for k in klj2)
                 
-                if skor1 > skor2: tokeni[t_idx] = _sacuvaj_velika_slova(s, z1, suf)
-                else: tokeni[t_idx] = _sacuvaj_velika_slova(s, z2, suf)
+                skor1 = sum(len(re.findall(re.escape(k), okolina)) for k in mapa['kljucevi1'])
+                skor2 = sum(len(re.findall(re.escape(k), okolina)) for k in mapa['kljucevi2'])
+                
+                # Izvlačenje originalnog nastavka iz ekavske reči (npr. 'ede' iz 'sede' -> 'ije' + 'de' = 'sijede')
+                nastavak = rijec_lower[3:] # seče sve posle prva 3 slova ('sed')
+                
+                if skor1 > skor2:
+                    koren_zamene = mapa['ako_je_grupa1']
+                else:
+                    koren_zamene = mapa['ako_je_grupa2']
+                
+                prava_zamjena = koren_zamene + nastavak
+                tokeni[t_idx] = _sacuvaj_velika_slova(rijec, prava_zamjena)
+                
     return "".join(tokeni)
 
 def zamijeni_rijeci(tekst):
-    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
+    # Prvo proveravamo kontekstualne reči, pa tek onda opšte filtere
+    tekst = _primijeni_kontekst_prozor(tekst)
+    tekst = _primijeni_stems(tekst)
+    tekst = _primijeni_exact(tekst)
+    return tekst
 
 def obradi_datoteku(ulaz, izlaz):
     if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
