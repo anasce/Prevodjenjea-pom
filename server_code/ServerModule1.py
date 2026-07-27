@@ -358,6 +358,8 @@ KONTEKST_MAPE = [
     }
 ]
 
+
+
 def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
 def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
@@ -390,44 +392,41 @@ def _primijeni_stems(tekst):
     return tekst
 
 def _primijeni_kontekst_prozor(tekst):
-    tokeni = re.split(r'([^\W\d_]+)', tekst, flags=re.UNICODE)
-    idx_p = [idx for idx, t in enumerate(tokeni) if re.match(r'^[^\W\d_]+$', t)]
+    recenice = re.split(r'([.!?\n]+)', tekst)
+    novi_delovi = []
     
-    for i, t_idx in enumerate(idx_p):
-        trenutna_rijec = tokeni[t_idx]
-        rijec_lower = trenutna_rijec.lower()
-        
-        for mapa in KONTEKST_MAPE:
-            nadjen_ekavski = None
-            for e_rec in mapa['ekavski']:
-                if rijec_lower.startswith(e_rec):
-                    if nadjen_ekavski is None or len(e_rec) > len(nadjen_ekavski):
-                        nadjen_ekavski = e_rec
+    for recenica in recenice:
+        if not recenica.strip() or re.match(r'^[...!?\n]+$', recenica):
+            novi_delovi.append(recenica)
+            continue
             
-            if nadjen_ekavski:
-                prozor = [tokeni[idx_p[j]].lower() for j in range(max(0, i-3), i)] + [tokeni[idx_p[j]].lower() for j in range(i+1, min(len(idx_p), i+4))]
-                okolina = " ".join(prozor)
-                
-                skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
-                skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
-                
-                nastavak = rijec_lower[len(nadjen_ekavski):]
-                
-                if skor1 > skor2: korijen_zamjene = mapa['ako_je_grupa1']
-                else: korijen_zamjene = mapa['ako_je_grupa2']
-                
-                if nadjen_ekavski == 'sed' and nastavak == 'ela':
-                    if skor1 > skor2: prava_zamjena = 'sijedila'
-                    else: prava_zamjena = 'sjedjela'
-                else:
-                    prava_zamjena = korijen_zamjene + nadjen_ekavski[3:] + nastavak
-                
-                tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, prava_zamjena)
-                
-    return "".join(tokeni)
+        tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.UNICODE)
+        idx_p = [idx for idx, t in enumerate(tokeni) if re.match(r'^[^\W\d_]+$', t)]
+        okolina = recenica.lower()
+        
+        for i, t_idx in enumerate(idx_p):
+            trenutna_rijec = tokeni[t_idx]
+            rijec_lower = trenutna_rijec.lower()
+            
+            for mapa in KONTEKST_MAPE:
+                if rijec_lower in mapa['ekavski']:
+                    skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
+                    skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
+                    
+                    if skor1 > skor2:
+                        baza_zamjene = mapa['mape_grupa1']
+                    else:
+                        baza_zamjene = mapa['mape_grupa2']
+                    
+                    if rijec_lower in baza_zamjene:
+                        tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, baza_zamjene[rijec_lower])
+                        
+        novi_delovi.append("".join(tokeni))
+        
+    return "".join(novi_delovi)
 
 def zamijeni_rijeci(tekst):
-    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
+    return _primijeni_exact(_primijeni_stems(_primijeni_kontekst_prozor(tekst)))
 
 def obradi_datoteku(ulaz, izlaz):
     if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
@@ -441,4 +440,4 @@ def ijekavizuj_tekst(ulazni_tekst):
 
 if __name__ == "__main__":
     if len(sys.argv) == 3:
-        obradi_datoteku(sys.argv, sys.argv)
+        obradi_datoteku(sys.argv[1], sys.argv[2])
