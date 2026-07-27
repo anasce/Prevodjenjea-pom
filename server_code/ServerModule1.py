@@ -1,11 +1,6 @@
 import sys, os, re 
 import anvil.server
 
-
-import sys, os, re 
-import anvil.server
-
-
 EXACT = [
   
   ('razboleo', 'razbolio'),
@@ -352,19 +347,19 @@ STEMS = [
 ]
 
 
-# KONTEKST sada radi sa tačnim mapiranjem celih reči bez rizičnog sečenja sufiksa
+
+
 KONTEKST_MAPE = [
     {
-        'ekavski': [ 'sede', 'sedi', 'seda'],
-        'ako_je_grupa1': 'sijed',  # npr. sijeda
-        'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv'],
-        'ako_je_grupa2': 'sjed',   # npr. sjedi
+        'ekavski': ['sed', 'sedo', 'seda', 'sede', 'sedeo', 'sedeli', 'sedu', 'sedi'],
+        'ako_je_grupa1': 'sijed', 'ako_je_grupa2': 'sjed',
+        'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv', 'mrsi'],
         'kljucevi2': ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć']
     }
 ]
 
-def _wb(word): return re.compile(r'(?<![^\W\d_])' + re.escape(word) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
-def _stem(stem): return re.compile(r'(?<![^\W\d_])(' + re.escape(stem) + r')(\w*)', re.UNICODE | re.IGNORECASE)
+def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
+def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
 _EXACT = [(_wb(e), e, i) for e, i in EXACT]
 _STEMS = [(_stem(e), e, i) for e, i in STEMS]
@@ -399,43 +394,51 @@ def _primijeni_kontekst_prozor(tekst):
     idx_p = [idx for idx, t in enumerate(tokeni) if re.match(r'^[^\W\d_]+$', t)]
     
     for i, t_idx in enumerate(idx_p):
-        rijec = tokeni[t_idx]
-        rijec_lower = rijec.lower()
+        trenutna_rijec = tokeni[t_idx]
+        rijec_lower = trenutna_rijec.lower()
         
         for mapa in KONTEKST_MAPE:
-            if rijec_lower in mapa['ekavski']:
-                # Pronalaženje okoline (3 reči pre i posle)
+            nadjen_ekavski = None
+            for e_rec in mapa['ekavski']:
+                if rijec_lower.startswith(e_rec):
+                    if nadjen_ekavski is None or len(e_rec) > len(nadjen_ekavski):
+                        nadjen_ekavski = e_rec
+            
+            if nadjen_ekavski:
                 prozor = [tokeni[idx_p[j]].lower() for j in range(max(0, i-3), i)] + [tokeni[idx_p[j]].lower() for j in range(i+1, min(len(idx_p), i+4))]
                 okolina = " ".join(prozor)
                 
-                skor1 = sum(len(re.findall(re.escape(k), okolina)) for k in mapa['kljucevi1'])
-                skor2 = sum(len(re.findall(re.escape(k), okolina)) for k in mapa['kljucevi2'])
+                skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
+                skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
                 
-                # Izvlačenje originalnog nastavka iz ekavske reči (npr. 'ede' iz 'sede' -> 'ije' + 'de' = 'sijede')
-                nastavak = rijec_lower[3:] # seče sve posle prva 3 slova ('sed')
+                nastavak = rijec_lower[len(nadjen_ekavski):]
                 
-                if skor1 > skor2:
-                    koren_zamene = mapa['ako_je_grupa1']
+                if skor1 > skor2: korijen_zamjene = mapa['ako_je_grupa1']
+                else: korijen_zamjene = mapa['ako_je_grupa2']
+                
+                if nadjen_ekavski == 'sed' and nastavak == 'ela':
+                    if skor1 > skor2: prava_zamjena = 'sijedila'
+                    else: prava_zamjena = 'sjedjela'
                 else:
-                    koren_zamene = mapa['ako_je_grupa2']
+                    prava_zamjena = korijen_zamjene + nadjen_ekavski[3:] + nastavak
                 
-                prava_zamjena = koren_zamene + nastavak
-                tokeni[t_idx] = _sacuvaj_velika_slova(rijec, prava_zamjena)
+                tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, prava_zamjena)
                 
     return "".join(tokeni)
 
 def zamijeni_rijeci(tekst):
-    # Prvo proveravamo kontekstualne reči, pa tek onda opšte filtere
-    tekst = _primijeni_kontekst_prozor(tekst)
-    tekst = _primijeni_stems(tekst)
-    tekst = _primijeni_exact(tekst)
-    return tekst
+    return _primijeni_exact(_primijeni_stems(_primijeni_kontekst_prozor(tekst)))
 
 def obradi_datoteku(ulaz, izlaz):
     if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
     with open(ulaz, encoding="utf-8") as f: t = f.read()
     with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
+    print(f"Završeno: '{ulaz}' -> '{izlaz}'")
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
     return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
+
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        obradi_datoteku(sys.argv, sys.argv)
