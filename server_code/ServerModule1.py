@@ -2,7 +2,8 @@ import sys, os, re
 import anvil.server
 
 EXACT = [
-   ('razboleo', 'razbolio'),
+  
+  ('razboleo', 'razbolio'),
   ('sledeći', 'slijedeći'), 
   ('zamenik', 'zamjenik'),
   ('svideo', 'svidio'),
@@ -31,10 +32,13 @@ EXACT = [
   ('dev', 'djev'),
   ('lek', 'lijek'),
 
+
+
 ]
 
+
 STEMS = [
-      ('četvoromeseč', 'četvoromjeseč'),
+    ('četvoromeseč', 'četvoromjeseč'),
     ('devetomeseč', 'devetomjeseč'),
     ('desetomeseč', 'desetomjeseč'),
     ('pretpostavk', 'pretpostavk'),
@@ -339,6 +343,7 @@ STEMS = [
     ('cenit', 'cijeniti'),
     ('bel', 'bijel'),
 
+ 
 ]
 
 KONTEKST = [
@@ -358,7 +363,7 @@ def da_li_je_pocetak_recenice(tekst, pozicija):
 
 def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     if izvorna.isupper(): return zamjena.upper() + sufiks.upper()
-    if izvorna.istitle(): return zamjena.capitalize() + sufiks
+    if izvorna[0].isupper(): return zamjena.capitalize() + sufiks
     return zamjena + sufiks
 
 def _primijeni_exact(tekst):
@@ -395,16 +400,11 @@ def _primijeni_kontekst_prozor(tekst):
                 skor2 = sum(len(re.findall(re.escape(k), okolina)) for k in klj2)
                 
                 if skor1 > skor2: tokeni[t_idx] = _sacuvaj_velika_slova(s, z1, suf)
-                elif skor2 > skor1: tokeni[t_idx] = _sacuvaj_velika_slova(s, z2, suf)
+                else: tokeni[t_idx] = _sacuvaj_velika_slova(s, z2, suf)
     return "".join(tokeni)
 
 def zamijeni_rijeci(tekst):
     return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
-
-def obradi_datoteku(ulaz, izlaz):
-    if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
-    with open(ulaz, encoding="utf-8") as f: t = f.read()
-    with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
