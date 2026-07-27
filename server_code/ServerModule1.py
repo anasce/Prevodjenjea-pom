@@ -363,8 +363,9 @@ def da_li_je_pocetak_recenice(tekst, pozicija):
 
 def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     if izvorna.isupper(): return zamjena.upper() + sufiks.upper()
-    if izvorna[0].isupper(): return zamjena.capitalize() + sufiks
+    if izvorna.istitle(): return zamjena.capitalize() + sufiks
     return zamjena + sufiks
+
 
 def _primijeni_exact(tekst):
     for pat, e, i in _EXACT:
