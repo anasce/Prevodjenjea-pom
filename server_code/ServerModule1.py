@@ -348,7 +348,7 @@ STEMS = [
 
 KONTEKST = [
     ('sed', 'sijed', ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv'], 
-           'sjed', ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod'])
+           'sjed', ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć'])
 ]
 
 def _wb(word): return re.compile(r'(?<![^\W\d_])' + re.escape(word) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
