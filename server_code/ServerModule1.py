@@ -427,7 +427,7 @@ def _primijeni_kontekst_prozor(tekst):
     return "".join(tokeni)
 
 def zamijeni_rijeci(tekst):
-    return _primijeni_exact(_primijeni_stems(_primijeni_kontekst_prozor(tekst)))
+    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))t)))
 
 def obradi_datoteku(ulaz, izlaz):
     if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
