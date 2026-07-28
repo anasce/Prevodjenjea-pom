@@ -387,7 +387,6 @@ STEMS = [
       ('pesm', 'pjesm'),
       ('peva', 'pjeva'),
       ('peša', 'pješa'),
-      ('preć', 'prijeć'),
       ('rečn', 'riječn'),
       ('reši', 'riješi'),
       ('retk', 'rijetk'),
