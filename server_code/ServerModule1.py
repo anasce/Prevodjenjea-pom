@@ -405,6 +405,114 @@ IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'raz
 
 
 
+
+
+
+def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
+def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
+
+_EXACT = [(_wb(e), e, i) for e, i in EXACT]
+_STEMS = [(_stem(e), e, i) for e, i in STEMS]
+
+def da_li_je_pocetak_recenice(tekst, pozicija):
+    p = tekst[:pozicija].strip()
+    return True if not p or p[-1] in ['.', '!', '?', '\n', '"', '„', '(', '['] else False
+
+def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
+    if izvorna.isupper(): return zamjena.upper() + sufiks.upper()
+    if izvorna.istitle(): return zamjena.capitalize() + sufiks
+    return zamjena + sufiks
+
+def _primijeni_exact(tekst):
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
+    for pat, e, i in _EXACT:
+        def _r(m):
+            s = m.group(0)
+            if da_li_je_pocetak_recenice(tekst, m.start()):
+                if s.lower() in TACNA_IMENA or any(s.lower().startswith(k) for k in KORIJENI_PREZIMENA):
+                    return s
+            # POPRAVLJENO: s[0].isupper() proverava samo veliko početno slovo unutar rečenice
+            if s and s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                return s
+            return _sacuvaj_velika_slova(s, i)
+        tekst = pat.sub(_r, tekst)
+    return tekst
+
+def _primijeni_stems(tekst):
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
+    TEHNICKI_IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
+    for pat, e, i in _STEMS:
+        def _r(m):
+            s, suf = m.group(1), m.group(2)
+            puna_rec = (s + suf).lower()
+            if da_li_je_pocetak_recenice(tekst, m.start()):
+                if puna_rec in TACNA_IMENA or any(puna_rec.startswith(k) for k in KORIJENI_PREZIMENA):
+                    return m.group(0)
+            if any(puna_rec.startswith(izuzetak) for izuzetak in TEHNICKI_IZUZECI):
+                return m.group(0)
+            # POPRAVLJENO: s[0].isupper() proverava samo veliko početno slovo unutar rečenice
+            if s and s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                return m.group(0)
+            return _sacuvaj_velika_slova(s, i, suf)
+        tekst = pat.sub(_r, tekst)
+    return tekst
+
+def _primijeni_kontekst_prozor(tekst):
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
+    recenice = re.split(r'([.!?\n]+)', tekst)
+    novi_delovi = []
+    
+    for recenica in recenice:
+        if not recenica.strip() or re.match(r'^[...!?\n]+$', recenica):
+            novi_delovi.append(recenica)
+            continue
+            
+        tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.UNICODE)
+        idx_p = [idx for idx, t in enumerate(tokeni) if re.match(r'^[^\W\d_]+$', t)]
+        okolina = recenica.lower()
+        
+        for i, t_idx in enumerate(idx_p):
+            trenutna_rijec = tokeni[t_idx]
+            rijec_lower = trenutna_rijec.lower()
+            
+            if i == 0 and (rijec_lower in TACNA_IMENA or any(rijec_lower.startswith(k) for k in KORIJENI_PREZIMENA)):
+                continue
+                
+            for mapa in KONTEKST_MAPE:
+                if rijec_lower in mapa['ekavski']:
+                    skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
+                    skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
+                    
+                    if skor1 > skor2:
+                        baza_zamjene = mapa['mape_grupa1']
+                    else:
+                        baza_zamjene = mapa['mape_grupa2']
+                    
+                    if rijec_lower in baza_zamjene:
+                        tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, baza_zamjene[rijec_lower])
+                        
+        novi_delovi.append("".join(tokeni))
+        
+    return "".join(novi_delovi)
+
+def zamijeni_rijeci(tekst):
+    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
+
+@anvil.server.callable
+def ijekavizuj_tekst(ulazni_tekst):
+    if not ulazni_tekst:
+        return ""
+    try:
+        return zamijeni_rijeci(ulazni_tekst)
+    except Exception as greska:
+        print(f"Greška pri obradi teksta: {greska}")
+        return ulazni_tekst
+
+
+
 def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
 def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
