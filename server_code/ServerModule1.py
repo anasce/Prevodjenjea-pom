@@ -3,6 +3,7 @@ import anvil.server
 
 EXACT = [
   
+  ('doprineo', 'doprinio'),
   ('razboleo', 'razbolio'),
   ('sledeći', 'slijedeći'), 
   ('zamenik', 'zamjenik'),
@@ -53,6 +54,7 @@ STEMS = [
     ('potpreds', 'potpredsj'),
     ('dragocen', 'dragocjen'),
     ('dvomeseč', 'dvomjeseč'),
+    ('zakasnel', 'zakašnjel'),
     ('tromeseč', 'tromjeseč'),
     ('opredeli', 'opredijeli'),
     ('ponedelj', 'ponedjelj'),
@@ -70,16 +72,20 @@ STEMS = [
     ('prebole', 'prebolje'),
     ('premešt', 'premješt'),
     ('premest', 'premjest'),
+    ('dodelj', 'dodijelj'),
     ('odeljak', 'odjeljak'),
-    ('doprine', 'doprinije'),
+    ('doprinel', 'doprinijel'),
+    ('doprinos', 'doprinios'),
     ('neizbež', 'neizbjež'),
     ('neizmer', 'neizmjer'),
+    ('telefon', 'telefon'),
     ('letelic', 'letjelic'),
     ('nadžive', 'nadživje'),
     ('prosleđ', 'prosljeđ'),
     ('osvetli', 'osvijetli'),
     ('osvetlj', 'osvjetlj'),
     ('pobeg', 'pobjeg'),
+    ('dodel', 'dodjel'),
     ('pobegl', 'pobjegl'),
     ('prevar', 'prevar'),
     ('povest', 'povijest'),
@@ -87,6 +93,7 @@ STEMS = [
     ('gnezdo', 'gnijezdo'),
     ('unapre', 'unaprije'),
     ('razbole', 'razbolje'),
+    ('nalepn', 'naljepn'),
     ('zaplena', 'zapljena'),
     ('zaplenu', 'zapljenu'),
     ('zapleni', 'zaplijeni'),
@@ -122,6 +129,7 @@ STEMS = [
     ('svugde', 'svugdje'),
     ('savest', 'savjest'),
     ('proleć', 'proljeć'),
+    ('nalep', 'nalijep'),
     ('nalete', 'naletje'),
     ('svetsk', 'svjetsk'),
     ('povređ', 'povrijeđ'),
@@ -135,6 +143,8 @@ STEMS = [
     ('stalež', 'stalež'),
     ('obelež', 'obiljež'),
     ('izgore', 'izgorje'),
+    ('prosek', 'prosijek'),
+    ('proseč', 'prosječ'),
     ('nedelj', 'nedjelj'),
     ('razmer', 'razmjer'),
     ('primer', 'primjer'),
@@ -187,7 +197,6 @@ STEMS = [
     ('živel', 'živjel'),
     ('živeo', 'živio'),
     ('nedel', 'nedjel'),
-    ('obe', 'obje'),
     ('odole', 'odolje'),
     ('uvide', 'uvidje'),
     ('pover', 'povjer'),
@@ -230,6 +239,8 @@ STEMS = [
     ('ocenj', 'ocijenj'),
     ('greja', 'grija'),
     ('smeja', 'smija'),
+    ('iznet', 'iznijet'),
+    ('cenit', 'cijeniti'),
     ('sreds', 'sreds'),
     ('cvet', 'cvijet'),
     ('slep', 'slijep'),
@@ -237,7 +248,7 @@ STEMS = [
     ('deci', 'djeci'),
     ('decu', 'djecu'),
     ('deco', 'djeco'),
-    ('sede', 'sjedje'),
+    ('uteh', 'utjeh'),
     ('greh', 'grijeh'),
     ('mlek', 'mlijek'),
     ('deli', 'dijeli'),
@@ -261,7 +272,7 @@ STEMS = [
     ('zver', 'zvijer'),
     ('donel', 'donijel'),
     ('vred', 'vrijed'),
-    ('iznet', 'iznijet'),
+    ('deča', 'dječa'),
     ('delo', 'djelo'),
     ('dela', 'djela'),
     ('delo', 'djelo'),
@@ -307,11 +318,15 @@ STEMS = [
     ('letnj', 'ljetnj'),
     ('odel', 'odjel'),
     ('smel', 'smjel'),
-    ('leč', 'liječ'),
-    ('rek', 'rijek'),
+    ('venč', 'vjenč'),
+    ('ceni', 'cijeni'),
+    ('cena', 'cijena'),
+    ('cenu', 'cijenu'),
     ('leko', 'ljeko'),
     ('leku', 'lijeku'),
     ('leka', 'lijeka'),
+    ('leč', 'liječ'),
+    ('rek', 'rijek'),
     ('lev', 'lijev'),
     ('vol', 'volj'),
     ('reč', 'riječ'),
@@ -319,8 +334,10 @@ STEMS = [
     ('cep', 'cijep'),
     ('pes', 'pijes'),
     ('lep', 'lijep'),
+    ('obe', 'obje'),
     ('une', 'unije'),
     ('bed', 'bijed'),
+    ('tel', 'tijel'),
     ('cel', 'cijel'),
     ('ded', 'djed'),
     ('reš', 'rješ'),
@@ -337,16 +354,12 @@ STEMS = [
     ('sen', 'sjen'),
     ('seć', 'sjeć'),
     ('hte', 'htje'),
-    ('ceni', 'cijeni'),
-    ('cena', 'cijena'),
-    ('cenu', 'cijenu'),
-    ('cenit', 'cijeniti'),
+
+
     ('bel', 'bijel'),
 
  
 ]
-
-
 
 
 KONTEKST_MAPE = [
@@ -362,10 +375,33 @@ KONTEKST_MAPE = [
             'sedela': 'sjedjela', 'sedeli': 'sjedjeli', 'sedeo': 'sjedio', 'sedio': 'sjedio',
             'sede': 'sjede', 'sedu': 'sjedu', 'sedi': 'sjedi', 'sedog': 'sjedog', 'sedoh': 'sjedoh'
         }
+    },
+   
+    {
+        'ekavski': ['svet'],
+        'kljucevi1': ['zemlj', 'planet', 'ljud', 'narod', 'putov', 'obid', 'držav'],
+        'kljucevi2': ['bog', 'crkv', 'otac', 'duh', 'krst', 'ikona', 'svešten', 'vjera'],
+        'mape_grupa1': {'svet': 'svijet'},
+        'mape_grupa2': {'svet': 'svet'}
+    },
+    {
+        'ekavski': ['leci'],
+        'kljucevi1': ['papir', 'prospekt', 'reklam', 'dijel', 'štamp', 'sto', 'kutij'],
+        'kljucevi2': ['boles', 'doktor', 'bolnic', 'zdrav', 'lijek', 'pacijent', 'ran'],
+        'mape_grupa1': {'leci': 'letci'},
+        'mape_grupa2': {'leci': 'liječi'}
+    },
+    {
+        'ekavski': ['bela', 'bele'],
+        'kljucevi1': ['boj', 'papir', 'košulj', 'snijeg', 'haljin', 'zid', 'platn'],
+        'kljucevi2': ['pladn', 'dan', 'zabel', 'platn', 'košulj', 'zid', 'boj'],
+        'mape_grupa1': {'bela': 'bijela', 'bele': 'bijele'},
+        'mape_grupa2': {'bela': 'bjelila', 'bele': 'bjelile'}
     }
 ]
 
 
+IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
 
 def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
 def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
@@ -386,14 +422,24 @@ def _primijeni_exact(tekst):
     for pat, e, i in _EXACT:
         def _r(m):
             s = m.group(0)
+            if da_li_je_pocetak_recenice(tekst, m.start()):
+                if any(s.lower().startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+                    return s
             return s if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
         tekst = pat.sub(_r, tekst)
     return tekst
 
 def _primijeni_stems(tekst):
+    IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
     for pat, e, i in _STEMS:
         def _r(m):
             s, suf = m.group(1), m.group(2)
+            puna_rec = (s + suf).lower()
+            if da_li_je_pocetak_recenice(tekst, m.start()):
+                if any(puna_rec.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+                    return m.group(0)
+            if any(puna_rec.startswith(izuzetak) for izuzetak in IZUZECI):
+                return m.group(0)
             return m.group(0) if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i, suf)
         tekst = pat.sub(_r, tekst)
     return tekst
@@ -415,6 +461,9 @@ def _primijeni_kontekst_prozor(tekst):
             trenutna_rijec = tokeni[t_idx]
             rijec_lower = trenutna_rijec.lower()
             
+            if i == 0 and any(rijec_lower.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+                continue
+                
             for mapa in KONTEKST_MAPE:
                 if rijec_lower in mapa['ekavski']:
                     skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
@@ -433,18 +482,14 @@ def _primijeni_kontekst_prozor(tekst):
     return "".join(novi_delovi)
 
 def zamijeni_rijeci(tekst):
-    return _primijeni_exact(_primijeni_stems(_primijeni_kontekst_prozor(tekst)))
-
-def obradi_datoteku(ulaz, izlaz):
-    if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
-    with open(ulaz, encoding="utf-8") as f: t = f.read()
-    with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
-    print(f"Završeno: '{ulaz}' -> '{izlaz}'")
+    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
-    return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
-
-if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        obradi_datoteku(sys.argv[1], sys.argv[2])
+    if not ulazni_tekst:
+        return ""
+    try:
+        return zamijeni_rijeci(ulazni_tekst)
+    except Exception as greska:
+        print(f"Greška pri obradi teksta: {greska}")
+        return ulazni_tekst
