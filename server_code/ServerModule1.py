@@ -403,6 +403,8 @@ KONTEKST_MAPE = [
 
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
 
+
+
 def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
 def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
@@ -419,32 +421,42 @@ def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     return zamjena + sufiks
 
 def _primijeni_exact(tekst):
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     for pat, e, i in _EXACT:
         def _r(m):
             s = m.group(0)
             if da_li_je_pocetak_recenice(tekst, m.start()):
-                if any(s.lower().startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+                if s.lower() in TACNA_IMENA or any(s.lower().startswith(k) for k in KORIJENI_PREZIMENA):
                     return s
-            return s if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
+            if s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                return s
+            return _sacuvaj_velika_slova(s, i)
         tekst = pat.sub(_r, tekst)
     return tekst
 
 def _primijeni_stems(tekst):
-    IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
+    TEHNICKI_IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
     for pat, e, i in _STEMS:
         def _r(m):
             s, suf = m.group(1), m.group(2)
             puna_rec = (s + suf).lower()
             if da_li_je_pocetak_recenice(tekst, m.start()):
-                if any(puna_rec.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+                if puna_rec in TACNA_IMENA or any(puna_rec.startswith(k) for k in KORIJENI_PREZIMENA):
                     return m.group(0)
-            if any(puna_rec.startswith(izuzetak) for izuzetak in IZUZECI):
+            if any(puna_rec.startswith(izuzetak) for izuzetak in TEHNICKI_IZUZECI):
                 return m.group(0)
-            return m.group(0) if (s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i, suf)
+            if s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                return m.group(0)
+            return _sacuvaj_velika_slova(s, i, suf)
         tekst = pat.sub(_r, tekst)
     return tekst
 
 def _primijeni_kontekst_prozor(tekst):
+    TACNA_IMENA = ['vera', 'veri', 'veru']
+    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     recenice = re.split(r'([.!?\n]+)', tekst)
     novi_delovi = []
     
@@ -461,7 +473,7 @@ def _primijeni_kontekst_prozor(tekst):
             trenutna_rijec = tokeni[t_idx]
             rijec_lower = trenutna_rijec.lower()
             
-            if i == 0 and any(rijec_lower.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
+            if i == 0 and (rijec_lower in TACNA_IMENA or any(rijec_lower.startswith(k) for k in KORIJENI_PREZIMENA)):
                 continue
                 
             for mapa in KONTEKST_MAPE:
@@ -482,7 +494,7 @@ def _primijeni_kontekst_prozor(tekst):
     return "".join(novi_delovi)
 
 def zamijeni_rijeci(tekst):
-    return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
+    return _primijeni_exact(_primijeni_stems(_primijeni_kontekst_prozor(tekst)))
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
