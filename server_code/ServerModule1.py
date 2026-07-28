@@ -403,11 +403,6 @@ KONTEKST_MAPE = [
 
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
 
-
-
-
-
-
 def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
 def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
@@ -424,18 +419,13 @@ def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     return zamjena + sufiks
 
 def _primijeni_exact(tekst):
-    TACNA_IMENA = ['vera', 'veri', 'veru']
-    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     for pat, e, i in _EXACT:
         def _r(m):
             s = m.group(0)
             if da_li_je_pocetak_recenice(tekst, m.start()):
-                if s.lower() in TACNA_IMENA or any(s.lower().startswith(k) for k in KORIJENI_PREZIMENA):
+                if any(s.lower().startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
                     return s
-            # POPRAVLJENO: s[0].isupper() proverava samo veliko početno slovo unutar rečenice
-            if s and s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
-                return s
-            return _sacuvaj_velika_slova(s, i)
+            return s if (s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
         tekst = pat.sub(_r, tekst)
     return tekst
 
@@ -443,25 +433,28 @@ def _primijeni_stems(tekst):
     TACNA_IMENA = ['vera', 'veri', 'veru']
     KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     TEHNICKI_IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
+    
     for pat, e, i in _STEMS:
         def _r(m):
             s, suf = m.group(1), m.group(2)
             puna_rec = (s + suf).lower()
+            
             if da_li_je_pocetak_recenice(tekst, m.start()):
                 if puna_rec in TACNA_IMENA or any(puna_rec.startswith(k) for k in KORIJENI_PREZIMENA):
                     return m.group(0)
+                    
             if any(puna_rec.startswith(izuzetak) for izuzetak in TEHNICKI_IZUZECI):
                 return m.group(0)
-            # POPRAVLJENO: s[0].isupper() proverava samo veliko početno slovo unutar rečenice
-            if s and s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                
+            if s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
                 return m.group(0)
+                
             return _sacuvaj_velika_slova(s, i, suf)
+            
         tekst = pat.sub(_r, tekst)
     return tekst
 
 def _primijeni_kontekst_prozor(tekst):
-    TACNA_IMENA = ['vera', 'veri', 'veru']
-    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     recenice = re.split(r'([.!?\n]+)', tekst)
     novi_delovi = []
     
@@ -478,7 +471,7 @@ def _primijeni_kontekst_prozor(tekst):
             trenutna_rijec = tokeni[t_idx]
             rijec_lower = trenutna_rijec.lower()
             
-            if i == 0 and (rijec_lower in TACNA_IMENA or any(rijec_lower.startswith(k) for k in KORIJENI_PREZIMENA)):
+            if i == 0 and any(rijec_lower.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
                 continue
                 
             for mapa in KONTEKST_MAPE:
@@ -501,6 +494,12 @@ def _primijeni_kontekst_prozor(tekst):
 def zamijeni_rijeci(tekst):
     return _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
 
+def obradi_datoteku(ulaz, izlaz):
+    if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
+    with open(ulaz, encoding="utf-8") as f: t = f.read()
+    with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
+    print(f"Završeno: '{ulaz}' -> '{izlaz}'")
+
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
     if not ulazni_tekst:
@@ -511,7 +510,6 @@ def ijekavizuj_tekst(ulazni_tekst):
         print(f"Greška pri obradi teksta: {greska}")
         return ulazni_tekst
 
-
-
-
-
+if __name__ == "__main__":
+    if len(sys.argv) == 3:
+        obradi_datoteku(sys.argv[1], sys.argv[2])
