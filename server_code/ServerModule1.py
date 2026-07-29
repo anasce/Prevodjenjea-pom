@@ -606,9 +606,9 @@ KONTEKST_MAPE = [
 }
 ]
     # Kompajliranje se radi samo jednom i čuva u globalnoj memoriji
-  _KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE), e, i) for e, i in EXACT]
-  _KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
-  _KESH_KONTEKST = KONTEKST_MAPE
+_KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE), e, i) for e, i in EXACT]
+_KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
+_KESH_KONTEKST = KONTEKST_MAPE
     
   return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
 
