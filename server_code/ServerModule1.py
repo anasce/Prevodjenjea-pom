@@ -572,8 +572,8 @@ KONTEKST_MAPE = [
     'ekavski': ['slede','sledi','slediti','sledile','sledila','sledilo'],
     'kljucevi1': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
     'kljucevi2': ['krv', 'strah', 'užas', 'šok', 'hladnoć', 'mraz', 'led', 'pogled'],
-    'mape_grupa1': {'slede': 'slijede','sledi': 'slijedi','slediti': 'slijediti','sledile': 'slijedile','sledila': 'slijedjela','sledilo': 'slijedjelo'},
-    'mape_grupa2': {'slede': 'slede','sledi': 'slediti','slediti': 'sledile','sledila': 'sledila','sledilo': 'sledilo','sledili': 'sledili'}
+    'mape_grupa1': {'slede': 'slijede','sledi': 'slijedi','slediti': 'slijediti','sledile': 'slijedile','sledila': 'slijedila','sledilo': 'slijedilo'},
+    'mape_grupa2': {'slede': 'slede','sledi': 'sledi','slediti': 'slediti','sledila': 'sledila','sledilo': 'sledilo','sledili': 'sledili'}
 }
 ,
 {
