@@ -2,26 +2,14 @@ import os
 import re
 import anvil.server
 
-# 1. Definišite globalne varijable kao None na samom vrhu koda (van funkcija)
-_KESH_EXACT = None
-_KESH_STEMS = None
-_KESH_KONTEKST = None
 
-def _get_translation_data():
-  global _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
-    
-    # Ako su podaci već jednom učitani i kompajlirani, odmah ih vrati (brzina: 0ms)
-  if _KESH_EXACT is not None:
-      return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
-        
-    # --- Ovo se izvršava SAMO JEDNOM tokom trajanja servera ---
 
 
 # =====================================================================
 # BAZA PODATAKA (EXACT, STEMS, KONTEKST)
 # =====================================================================
 
-  EXACT = [
+EXACT = [
     ('unapređenjima', 'unaprjeđenjima'),
     ('pravovercima', 'pravovjernima'),
     ('unapređenja', 'unaprjeđenja'),
@@ -119,7 +107,7 @@ def _get_translation_data():
 
 
 
-  STEMS = [
+STEMS = [
     ('četvoromeseč', 'četvoromjeseč'),
     ('desetomeseč', 'desetomjeseč'),
     ('devetomeseč', 'devetomjeseč'),
@@ -498,7 +486,7 @@ def _get_translation_data():
 ]
 
 
-  KONTEKST_MAPE = [
+KONTEKST_MAPE = [
     {
         'ekavski': ['sedela', 'sedeli', 'sedeo', 'sedio', 'sede', 'sedu', 'sedi', 'sedog', 'sedoh'],
         'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv', 'mrsi'],
@@ -605,12 +593,7 @@ def _get_translation_data():
 
 }
 ]
-    # Kompajliranje se radi samo jednom i čuva u globalnoj memoriji
-  _KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE), e, i) for e, i in EXACT]
-  _KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
-  _KESH_KONTEKST = KONTEKST_MAPE
-    
-  return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
+
 
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević','unesk']
 
@@ -779,11 +762,6 @@ def zamijeni_rijeci(tekst):
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
-    if not ulazni_tekst: 
-        return ""
-        
-    # Poziv funkcije koja koristi keširane podatke
-    _EXACT, _STEMS, KONTEKST_MAPE = _get_translation_data()
     if not ulazni_tekst:
         return ""
     try:
