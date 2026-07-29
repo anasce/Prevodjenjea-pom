@@ -569,11 +569,19 @@ KONTEKST_MAPE = [
 
 ,
 {
-    'ekavski': ['slede','sledi','slediti','sledile','sledila','sledilo'],
-    'kljucevi1': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
-    'kljucevi2': ['krv', 'strah', 'užas', 'šok', 'hladnoć', 'mraz', 'led', 'pogled'],
-    'mape_grupa1': {'slede': 'slijede','sledi': 'slijedi','slediti': 'slijediti','sledile': 'slijedile','sledila': 'slijedila','sledilo': 'slijedilo'},
-    'mape_grupa2': {'slede': 'slede','sledi': 'sledi','slediti': 'slediti','sledila': 'sledila','sledilo': 'sledilo','sledili': 'sledili'}
+    'ekavski': ['slede', 'sledi', 'slediti', 'sledile', 'sledila', 'sledilo', 'sledeli', 'sledeo', 'sledio'],
+    'kljucevi1': ['krv', 'strah', 'užas', 'šok', 'hladnoć', 'mraz', 'led', 'pogled', 'žilama'],
+    'kljucevi2': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor', 'putokaz'],
+    'mape_grupa1': {
+        'slede': 'slede', 'sledi': 'sledi', 'slediti': 'slediti', 
+        'sledile': 'sledile', 'sledila': 'sledila', 'sledilo': 'sledilo', 
+        'sledeli': 'sledeli', 'sledeo': 'sledeo', 'sledio': 'sledio'
+    },
+    'mape_grupa2': {
+        'slede': 'slijede', 'sledi': 'slijedi', 'slediti': 'slijediti', 
+        'sledile': 'slijedile', 'sledila': 'slijedjela', 'sledilo': 'slijedjelo', 
+        'sledeli': 'slijedjeli', 'sledeo': 'slijedio', 'sledio': 'slijedio'
+    }
 }
 ,
 {
@@ -657,11 +665,11 @@ def _primijeni_stems(tekst):
 
 def _primijeni_kontekst_prozor(tekst):
     recenice = re.split(r'([.!?\n]+)', tekst)
-    novi_delovi = []
+    novi_djelovi = []
     
     for recenica in recenice:
         if not recenica.strip() or re.match(r'^[...!?\n]+$', recenica):
-            novi_delovi.append(recenica)
+            novi_djelovi.append(recenica)
             continue
             
         tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.UNICODE)
@@ -688,10 +696,9 @@ def _primijeni_kontekst_prozor(tekst):
                     if rijec_lower in baza_zamjene:
                         tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, baza_zamjene[rijec_lower])
                         
-        novi_delovi.append("".join(tokeni))
+        novi_djelovi.append("".join(tokeni))
         
-    return "".join(novi_delovi)
-
+    return "".join(novi_djelovi)
 # =====================================================================
 # PRESLOVLJAVANJE (ĆIRILICA <-> LATINICA)
 # =====================================================================
@@ -702,7 +709,7 @@ def cirilica_u_latinicu(tekst):
         'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
         'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Ђ': 'Đ', 'ђ': 'đ',
         'Е': 'E', 'е': 'e', 'Ж': 'Ž', 'ж': 'ž', 'З': 'Z', 'з': 'z',
-        'И': 'I', 'и': 'i', 'Ј': 'J', 'ј': 'j', 'К': 'K', 'к': 'k',
+        'И': 'I', 'и': 'i', 'Ј': 'J', 'ј': 'j', 'K': 'K', 'к': 'k',
         'Л': 'L', 'л': 'l', 'М': 'M', 'м': 'm', 'Н': 'N', 'н': 'n',
         'О': 'O', 'о': 'o', 'П': 'P', 'п': 'p', 'Р': 'R', 'р': 'r',
         'С': 'S', 'с': 's', 'Т': 'T', 'т': 't', 'Ћ': 'Ć', 'ћ': 'ć',
@@ -728,14 +735,10 @@ def latinica_u_cirilicu(tekst):
         'L': 'Л', 'l': 'л', 'M': 'М', 'm': 'м', 'N': 'Н', 'n': 'н',
         'O': 'О', 'o': 'о', 'P': 'П', 'p': 'п', 'R': 'Р', 'r': 'р',
         'S': 'С', 's': 'с', 'T': 'Т', 't': 'т', 'Ć': 'Ћ', 'ć': 'ћ',
-        'U': 'У', 'u': 'у', 'F': 'Ф', 'f': 'f', 'H': 'Х', 'h': 'х',
-        'C': 'Ц', 'c': 'ц', 'Č': 'Č', 'č': 'č', 'Š': 'Ш', 'š': 'š'
+        'U': 'У', 'u': 'у', 'F': 'Ф', 'f': 'ф', 'H': 'Х', 'h': 'х',
+        'C': 'Ц', 'c': 'ц', 'Č': 'Č', 'č': 'č', 'Š': 'Ш', 'š': 'ш'
     }
     return "".join(mapa_lat_cir.get(c, c) for c in tekst)
-
-# =====================================================================
-# ORKESTRACIJA TOKA PREVOĐENJA
-# =====================================================================
 
 def zamijeni_rijeci(tekst):
     if not tekst:
@@ -743,20 +746,19 @@ def zamijeni_rijeci(tekst):
         
     cirilica_skup = set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш')
     
-    tekst_provjera = tekst.lstrip()
-    prvo_slovo = tekst_provjera[0] if tekst_provjera else ""
+    # PROVJERA: Da li u cijelom tekstu ima makar jedno ćirilično slovo
+    ima_cirilice = any(c in cirilica_skup for c in tekst)
     
-    je_cirilica = prvo_slovo in cirilica_skup
-    
-    if je_cirilica:
+    if ima_cirilice:
         tekst = cirilica_u_latinicu(tekst)
         
     tekst_ijekavski = _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
     
-    if je_cirilica:
+    if ima_cirilice:
         return latinica_u_cirilicu(tekst_ijekavski)
         
     return tekst_ijekavski
+
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
