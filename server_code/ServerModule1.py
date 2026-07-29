@@ -610,7 +610,7 @@ _KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re
 _KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
 _KESH_KONTEKST = KONTEKST_MAPE
     
-  return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
+return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
 
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević','unesk']
 
