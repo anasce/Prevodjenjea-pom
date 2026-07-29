@@ -2,12 +2,9 @@ import os
 import re
 import anvil.server
 
+import sys, os, re 
 
 
-
-# =====================================================================
-# BAZA PODATAKA (EXACT, STEMS, KONTEKST)
-# =====================================================================
 
 EXACT = [
     ('unapređenjima', 'unaprjeđenjima'),
@@ -583,6 +580,7 @@ KONTEKST_MAPE = [
         'sledeli': 'slijedjeli', 'sledeo': 'slijedio', 'sledio': 'slijedio'
     }
 }
+
 ,
 {
     'ekavski': ['sledeća','sledeći','sledeće','sledeću','sledećih'],
@@ -598,20 +596,27 @@ KONTEKST_MAPE = [
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević','unesk']
 
 IZUZECI_VELIKO_SLOVO = ['Nemci', 'Nemcima', 'Nemaca','Svetsko', 'Svetskom']
+_KESH_EXACT = None
+_KESH_STEMS = None
+_KESH_KONTEKST = None
 
+def _wb(rijec): return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
+def _stem(korijen): return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
 
-# =====================================================================
-# POMOĆNE REGEX FUNKCIJE I INICIJALIZACIJA
-# =====================================================================
+def _inicijalizuj_i_vrati_podatke():
+    global _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
+    
+    # Ako su podaci već jednom ukompajlirani u memoriji, odmah ih vrati
+    if _KESH_EXACT is not None:
+        return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
+        
+    # Izvršava se samo jednom pri prvom pozivu aplikacije
+    _KESH_EXACT = [(_wb(e), e, i) for e, i in EXACT]
+    _KESH_STEMS = [(_stem(e), e, i) for e, i in STEMS]
+    _KESH_KONTEKST = KONTEKST_MAPE
+    
+    return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
 
-def _wb(rijec): 
-    return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
-
-def _stem(korijen): 
-    return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
-
-_EXACT = [(_wb(e), e, i) for e, i in EXACT]
-_STEMS = [(_stem(e), e, i) for e, i in STEMS]
 
 def da_li_je_pocetak_recenice(tekst, pozicija):
     p = tekst[:pozicija].strip()
@@ -622,27 +627,28 @@ def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
     if izvorna.istitle(): return zamjena.capitalize() + sufiks
     return zamjena + sufiks
 
-# =====================================================================
-# LOGIKA PREVOĐENJA (EXACT, STEMS, KONTEKST PROZOR)
-# =====================================================================
 
-def _primijeni_exact(tekst):
-    for pat, e, i in _EXACT:
+def _primijeni_exact(tekst, ukompajlirani_exact):
+    for pat, e, i in ukompajlirani_exact:
         def _r(m):
             s = m.group(0)
             if da_li_je_pocetak_recenice(tekst, m.start()):
                 if any(s.lower().startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
                     return s
+            # POPRAVLJENO: s[0].isupper() provjerava samo veliko početno slovo
             return s if (s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
         tekst = pat.sub(_r, tekst)
+        
     return tekst
 
-def _primijeni_stems(tekst):
+
+def _primijeni_stems(tekst, ukompajlirani_stems):
+    
     TACNA_IMENA = ['vera', 'veri', 'veru']
     KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
     TEHNICKI_IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
     
-    for pat, e, i in _STEMS:
+    for pat, e, i in ukompajlirani_stems:
         def _r(m):
             s, suf = m.group(1), m.group(2)
             puna_rec = (s + suf).lower()
@@ -655,6 +661,7 @@ def _primijeni_stems(tekst):
                 return m.group(0)
                 
             if s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
+                # Ako je cela reč u listi izuzetaka, ostaje nepromenjena
                 if (s + suf) in IZUZECI_VELIKO_SLOVO:
                     return m.group(0)
                 
@@ -663,7 +670,9 @@ def _primijeni_stems(tekst):
         tekst = pat.sub(_r, tekst)
     return tekst
 
-def _primijeni_kontekst_prozor(tekst):
+def _primijeni_kontekst_prozor(tekst, kontekst_mape):
+   
+
     recenice = re.split(r'([.!?\n]+)', tekst)
     novi_djelovi = []
     
@@ -683,7 +692,7 @@ def _primijeni_kontekst_prozor(tekst):
             if i == 0 and any(rijec_lower.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
                 continue
                 
-            for mapa in KONTEKST_MAPE:
+            for mapa in kontekst_mape:
                 if rijec_lower in mapa['ekavski']:
                     skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
                     skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
@@ -699,9 +708,8 @@ def _primijeni_kontekst_prozor(tekst):
         novi_djelovi.append("".join(tokeni))
         
     return "".join(novi_djelovi)
-# =====================================================================
-# PRESLOVLJAVANJE (ĆIRILICA <-> LATINICA)
-# =====================================================================
+
+
 
 def cirilica_u_latinicu(tekst):
     mapa_cir_lat = {
@@ -743,25 +751,27 @@ def latinica_u_cirilicu(tekst):
 def zamijeni_rijeci(tekst):
     if not tekst:
         return tekst
-        
-    cirilica_skup = set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш')
-    
-    # PROVJERA: Da li u cijelom tekstu ima makar jedno ćirilično slovo
-    ima_cirilice = any(c in cirilica_skup for c in tekst)
-    
-    if ima_cirilice:
+    samo_slova = re.sub(r'[^\w]', '', tekst)
+    je_cirilica = samo_slova[0] in set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш') if samo_slova else False
+    if je_cirilica:
         tekst = cirilica_u_latinicu(tekst)
-        
-    tekst_ijekavski = _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
-    
-    if ima_cirilice:
-        return latinica_u_cirilicu(tekst_ijekavski)
-        
-    return tekst_ijekavski
+    u_exact, u_stems, k_mape = _inicijalizuj_i_vrati_podatke()
+    rezultat = _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst, u_exact), u_stems), k_mape)
+    return latinica_u_cirilicu(rezultat) if je_cirilica else rezultat
+
+
+
+
+
 
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
+    if not ulazni_tekst: 
+        return ""
+        
+    # Poziv funkcije koja koristi keširane podatke
+    _EXACT, _STEMS, KONTEKST_MAPE = _get_translation_data()
     if not ulazni_tekst:
         return ""
     try:
