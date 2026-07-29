@@ -21,7 +21,7 @@ def _get_translation_data():
 # BAZA PODATAKA (EXACT, STEMS, KONTEKST)
 # =====================================================================
 
-EXACT = [
+  EXACT = [
     ('unapređenjima', 'unaprjeđenjima'),
     ('pravovercima', 'pravovjernima'),
     ('unapređenja', 'unaprjeđenja'),
@@ -119,7 +119,7 @@ EXACT = [
 
 
 
-STEMS = [
+  STEMS = [
     ('četvoromeseč', 'četvoromjeseč'),
     ('desetomeseč', 'desetomjeseč'),
     ('devetomeseč', 'devetomjeseč'),
@@ -498,7 +498,7 @@ STEMS = [
 ]
 
 
-KONTEKST_MAPE = [
+  KONTEKST_MAPE = [
     {
         'ekavski': ['sedela', 'sedeli', 'sedeo', 'sedio', 'sede', 'sedu', 'sedi', 'sedog', 'sedoh'],
         'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv', 'mrsi'],
@@ -606,11 +606,11 @@ KONTEKST_MAPE = [
 }
 ]
     # Kompajliranje se radi samo jednom i čuva u globalnoj memoriji
-_KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE), e, i) for e, i in EXACT]
-_KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
-_KESH_KONTEKST = KONTEKST_MAPE
+  _KESH_EXACT = [(re.compile(r'(?<![^\W\d_])' + re.escape(e) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE), e, i) for e, i in EXACT]
+  _KESH_STEMS = [(re.compile(r'(?<![^\W\d_])(' + re.escape(e) + r')(\w*)', re.UNICODE | re.IGNORECASE), e, i) for e, i in STEMS]
+  _KESH_KONTEKST = KONTEKST_MAPE
     
-return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
+  return _KESH_EXACT, _KESH_STEMS, _KESH_KONTEKST
 
 IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević','unesk']
 
