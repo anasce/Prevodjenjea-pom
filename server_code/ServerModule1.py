@@ -1,16 +1,9 @@
+import anvil.server
 import os
 import re
-import anvil.server
-
-
-
-
-# =====================================================================
-# BAZA PODATAKA (EXACT, STEMS, KONTEKST)
-# =====================================================================
 
 EXACT = [
-    ('unapređenjima', 'unaprjeđenjima'),
+   ('unapređenjima', 'unaprjeđenjima'),
     ('pravovercima', 'pravovjernima'),
     ('unapređenja', 'unaprjeđenja'),
     ('unapređenje', 'unaprjeđenje'),
@@ -102,10 +95,6 @@ EXACT = [
     ('reč', 'riječ'),
     ('sme', 'smije'),
 ]
-
-
-
-
 
 STEMS = [
     ('četvoromeseč', 'četvoromjeseč'),
@@ -482,290 +471,170 @@ STEMS = [
     ('vek', 'vijek'),
     ('več', 'vječ'),
 
- 
 ]
+
+EXACT_DICT, STEMS_DICT = {k.lower(): v for k, v in EXACT}, {k.lower(): v for k, v in STEMS}
+
+_EX_PAT = "|".join(re.escape(k) for k in sorted(EXACT_DICT, key=len, reverse=True))
+_ST_PAT = "|".join(re.escape(k) for k in sorted(STEMS_DICT, key=len, reverse=True))
+
+_EXACT_RE = re.compile(r'(?<![^\W\d_])(' + _EX_PAT + r')(?![^\W\d_])', re.I | re.U) if EXACT_DICT else None
+_STEMS_RE = re.compile(r'(?<![^\W\d_])(' + _ST_PAT + r')([^\W\d_]*)', re.I | re.U) if STEMS_DICT else None
+
+IMENA_IZUZECI_KORIJENI = ['vera', 'veri', 'veru', 'sedić', 'seden', 'sedlar',  'slep', 'unesk']
+IZUZECI_VELIKO_SLOVO = {'Nemci', 'Nemcima', 'Nemaca', 'Svetsko', 'Svetskom'}
 
 
 KONTEKST_MAPE = [
     {
-        'ekavski': ['sedela', 'sedeli', 'sedeo', 'sedio', 'sede', 'sedu', 'sedi', 'sedog', 'sedoh'],
+        'ekavski': {'sedela', 'sedeli', 'sedeo', 'sedio', 'sede', 'sedu', 'sedi', 'sedog', 'sedoh'},
         'kljucevi1': ['kos', 'brad', 'zalisc', 'star', 'godin', 'glav', 'vlas', 'obrv', 'mrsi'],
         'kljucevi2': ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć', 'ispred'],
-        'mape_grupa1': {
-            'sedela': 'sijedila', 'sedeli': 'sijedili', 'sedeo': 'sijedio', 'sedio': 'sijedio',
-            'sede': 'sijede', 'sedu': 'sijedu', 'sedi': 'sijedi', 'sedog': 'sijedog', 'sedoh': 'sijedoh'
-        },
-        'mape_grupa2': {
-            'sedela': 'sjedjela', 'sedeli': 'sjedjeli', 'sedeo': 'sjedio', 'sedio': 'sjedio',
-            'sede': 'sjede', 'sedu': 'sjedu', 'sedi': 'sjedi', 'sedog': 'sjedog', 'sedoh': 'sjedoh'
-        }
-    },
-   
-    {
-        'ekavski': ['svet'],
-        'kljucevi1': ['zemlj', 'planet', 'ljud', 'narod', 'putov', 'obid', 'držav'],
-        'kljucevi2': ['bog', 'crkv', 'otac', 'duh', 'krst', 'ikona', 'svešten', 'vjera','knji','vidi'],
-        'mape_grupa1': {'svet': 'svijet'},
-        'mape_grupa2': {'svet': 'svet'}
+        'mape_grupa1': {'sedela': 'sijedila', 'sedeli': 'sijedili', 'sedeo': 'sijedio', 'sedio': 'sijedio', 'sede': 'sijede', 'sedu': 'sijedu', 'sedi': 'sijedi', 'sedog': 'sijedog', 'sedoh': 'sijedoh'},
+        'mape_grupa2': {'sedela': 'sjedjela', 'sedeli': 'sjedjeli', 'sedeo': 'sjedio', 'sedio': 'sjedio', 'sede': 'sjede', 'sedu': 'sjedu', 'sedi': 'sjedi', 'sedog': 'sjedog', 'sedoh': 'sjedoh'}
     },
     {
-        'ekavski': ['leci'],
-        'kljucevi1': ['papir', 'prospekt', 'reklam', 'dijel', 'štamp', 'sto', 'kutij'],
-        'kljucevi2': ['boles', 'doktor', 'bolnic', 'zdrav', 'lijek', 'pacijent', 'ran'],
-        'mape_grupa1': {'leci': 'letci'},
-        'mape_grupa2': {'leci': 'liječi'}
+        'ekavski': {'svet', 'sveta', 'svetu', 'svetom', 'svetovi', 'svetova', 'svetovima'},
+        'kljucevi1': ['bog', 'crkv', 'otac', 'duh', 'krst', 'ikona', 'svešten', 'vjera', 'knji', 'vidi'],
+        'kljucevi2': ['zemlj', 'planet', 'ljud', 'narod', 'putov', 'obid', 'držav'],
+        'mape_grupa1': {'svet': 'svet', 'sveta': 'sveta', 'svetu': 'svetu', 'svetom': 'svetom', 'svetovi': 'svetovi', 'svetova': 'svetova', 'svetovima': 'svetovima'},
+        'mape_grupa2': {'svet': 'svijet', 'sveta': 'svijeta', 'svetu': 'svijetu', 'svetom': 'svijetom', 'svetovi': 'svjetovi', 'svetova': 'svjetova', 'svetovima': 'svjetovima'},
     },
     {
-        'ekavski': ['bela', 'bele'],
+        'ekavski': {'bela', 'bele', 'belo', 'belog', 'belom', 'belu', 'beli', 'belih', 'belim'},
         'kljucevi1': ['boj', 'papir', 'košulj', 'snijeg', 'haljin', 'zid', 'platn'],
         'kljucevi2': ['pladn', 'dan', 'zabel', 'platn', 'košulj', 'zid', 'boj'],
-        'mape_grupa1': {'bela': 'bijela', 'bele': 'bijele'},
-        'mape_grupa2': {'bela': 'bjelila', 'bele': 'bjelile'}
+        'mape_grupa1': {'bela': 'bijela', 'bele': 'bijele', 'belo': 'bijelo', 'belog': 'bijelog', 'belom': 'bijelom', 'belu': 'bijelu', 'beli': 'bijeli', 'belih': 'bijelih', 'belim': 'bijelim'},
+        'mape_grupa2': {'bela': 'bjelila', 'bele': 'bjelile', 'belo': 'bjelilo', 'belog': 'bjelilog', 'belom': 'bjelilom', 'belu': 'bjelilu', 'beli': 'bjelili', 'belih': 'bjelilih', 'belim': 'bjelilim'}
     },
     {
-        'ekavski': ['selo'],
+        'ekavski': {'selo', 'sela', 'selu', 'selom', 'selima'},
         'kljucevi1': ['mjest', 'mesto', 'livad', 'životinj', 'krav', 'ovc', 'babi', 'ded', 'djed', 'imanj', 'prirod', 'oranic'],
         'kljucevi2': ['stolic', 'fotelj', 'klup', 'mest', 'sto', 'sof', 'park', 'sati', 'mirn', 'prozor', 'pod', 'kuć', 'ispred', 'ptica', 'dete', 'dijete'],
-        'mape_grupa1': {'selo': 'selo'}, # selo (mjesto)
-        'mape_grupa2': {'selo': 'sjelo'} # sjelo (glagol)
+        'mape_grupa1': {'selo': 'selo', 'sela': 'sela', 'selu': 'selu', 'selom': 'selom', 'selima': 'selima'},
+        'mape_grupa2': {'selo': 'sjelo', 'sela': 'sjela', 'selu': 'sjelu', 'selom': 'sjelom', 'selima': 'sjelima'}
     },
- {
-    'ekavski': ['dela', 'delu', 'delo', 'delima'],
-    'kljucevi1': ['značajn', 'sabran', 'knjig', 'pisac', 'umetnik', 'umjetnik', 'stvor', 'autor', 'opus', 'bibliotek'],
-
-    'kljucevi2': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit'],
-    'mape_grupa1': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima'}, 
-
-    'mape_grupa2': {'dela': 'dijela', 'delu': 'dijelu'} 
-},
- {
-        'ekavski': ['veće'],
+    {
+        'ekavski': {'dela', 'delu', 'delo', 'delima', 'delom', 'velika dela'},
+        'kljucevi1': ['značajn', 'sabran', 'knjig', 'pisac', 'umetnik', 'umjetnik', 'stvor', 'autor', 'opus', 'bibliotek'],
+        'kljucevi2': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit'],
+        'mape_grupa1': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima', 'delom': 'djelom'},
+        'mape_grupa2': {'dela': 'dijela', 'delu': 'dijelu', 'delo': 'dijelo', 'delima': 'dijelovima', 'delom': 'dijelom'}
+    },
+    {
+        'ekavski': {'veće', 'veća', 'veću', 'većim', 'većeg', 'većoj'},
         'kljucevi1': ['glomazn', 'gabarit', 'velik', 'poras', 'poveć', 'broj', 'dimenzij', 'tež', 'vis', 'šir', 'manj', 'dupl'],
         'kljucevi2': ['zasijed', 'zasjed', 'odbor', 'sudsk', 'ministarsk', 'gradsk', 'odluk', 'član', 'glasan', 'sastan', 'skupštin', 'savet', 'savjet'],
-        'mape_grupa1': {'veće': 'veće'},
-        'mape_grupa2': {'veće': 'vijeće'}
+        'mape_grupa1': {'veće': 'veće', 'veća': 'veća', 'veću': 'veću', 'većim': 'većim', 'većeg': 'većeg', 'većoj': 'većoj'},
+        'mape_grupa2': {'veće': 'vijeće', 'veća': 'vijeća', 'veću': 'vijeću', 'većim': 'vijećima', 'većeg': 'vijeća', 'većoj': 'vijeću'}
     },
-{
-    'ekavski': ['primene'],
-    'kljucevi1': ['znanj', 'teorij', 'praks', 'metod', 'zakon', 'pravil', 'sistem', 'funkcij', 'rezultat'],
-    'kljucevi2': ['alat', 'oruđ', 'kupil', 'sprem', 'priprem', 'planir', 'kazn', 'mjer', 'mjere', 'sankcij'],
-    'mape_grupa1': {'primene': 'primjene'},
-    'mape_grupa2': {'primene': 'primijene'}
-},
-{
-    'ekavski': ['reci'],
-    'kljucevi1': ['nekom', 'tati', 'bratu', 'prijatelj', 'kaž', 'rekn', 'istinu', 'poruk', 'pism', 'glasn', 'tiho'],
-    'kljucevi2': ['približ', 'obali', 'vod', 'tok', 'most', 'pliv', 'brod', 'čam', 'rib', 'jezer', 'mor', 'morsk'],
-    'mape_grupa1': {'reci': 'reci'},
-    'mape_grupa2': {'reci': 'rijeci'}
-},
-{
-    'ekavski': ['preko', 'preka'],
-    'kljucevi1': ['ljut', 'pogled', 'mrštit', 'osion', 'gled', 'izraz', 'oko', 'reč', 'riječ', 'narav', 'gnev', 'gnijev', 'prekor', 'hladn'],
-    'kljucevi2': ['preć', 'stić', 'doć', 'zakorač', 'most', 'prug', 'šin', 'put', 'ulic', 'rijek', 'potok', 'strana','obala','granic','objav','potrebn'],
-    'mape_grupa1': {'preko': 'prijeko', 'preka': 'prijeka'},
-    'mape_grupa2': {'preko': 'preko'}
-}
-
-,
-{
-    'ekavski': ['slede', 'sledi', 'slediti', 'sledile', 'sledila', 'sledilo', 'sledeli', 'sledeo', 'sledio'],
-    'kljucevi1': ['krv', 'strah', 'užas', 'šok', 'hladnoć', 'mraz', 'led', 'pogled', 'žilama'],
-    'kljucevi2': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor', 'putokaz'],
-    'mape_grupa1': {
-        'slede': 'slede', 'sledi': 'sledi', 'slediti': 'slediti', 
-        'sledile': 'sledile', 'sledila': 'sledila', 'sledilo': 'sledilo', 
-        'sledeli': 'sledeli', 'sledeo': 'sledeo', 'sledio': 'sledio'
+    {
+        'ekavski': {'primene', 'primena', 'primeni', 'primenu', 'primenom', 'primenama'},
+        'kljucevi1': ['znanj', 'teorij', 'praks', 'metod', 'zakon', 'pravil', 'sistem', 'funkcij', 'rezultat'],
+        'kljucevi2': ['alat', 'oruđ', 'kupil', 'sprem', 'priprem', 'planir', 'kazn', 'mjer', 'mjere', 'sankcij'],
+        'mape_grupa1': {'primene': 'primjene', 'primena': 'primjena', 'primeni': 'primjeni', 'primenu': 'primjenu', 'primenom': 'primjenom', 'primenama': 'primjenama'},
+        'mape_grupa2': {'primene': 'primijene', 'primena': 'primijene', 'primeni': 'primijene', 'primenu': 'primijene', 'primenom': 'primijene', 'primenama': 'primijene'}
     },
-    'mape_grupa2': {
-        'slede': 'slijede', 'sledi': 'slijedi', 'slediti': 'slijediti', 
-        'sledile': 'slijedile', 'sledila': 'slijedjela', 'sledilo': 'slijedjelo', 
-        'sledeli': 'slijedjeli', 'sledeo': 'slijedio', 'sledio': 'slijedio'
+    {
+        'ekavski': {'reci', 'recima'},
+        'kljucevi1': ['nekom', 'tati', 'bratu', 'prijatelj', 'kaž', 'rekn', 'istinu', 'poruk', 'pism', 'glasn', 'tiho'],
+        'kljucevi2': ['približ', 'obali', 'vod', 'tok', 'most', 'pliv', 'brod', 'čam', 'rib', 'jezer', 'mor', 'morsk'],
+        'mape_grupa1': {'reci': 'reci', 'recima': 'recima'},
+        'mape_grupa2': {'reci': 'rijeci', 'recima': 'riječima'}
+    },
+    {
+        'ekavski': {'preko', 'preka', 'preke', 'preku', 'preki', 'prekog', 'prekom'},
+        'kljucevi1': ['ljut', 'pogled', 'mrštit', 'osion', 'gled', 'izraz', 'oko', 'reč', 'riječ', 'narav', 'gnev', 'gnijev', 'prekor', 'hladn'],
+        'kljucevi2': ['preć', 'stić', 'doć', 'zakorač', 'most', 'prug', 'šin', 'put', 'ulic', 'rijek', 'potok', 'strana', 'obala', 'granic', 'objav', 'potrebn'],
+        'mape_grupa1': {'preko': 'prijeko', 'preka': 'prijeka', 'preke': 'prijeke', 'preku': 'prijeku', 'preki': 'prijeki', 'prekog': 'prijekog', 'prekom': 'prijekom'},
+        'mape_grupa2': {'preko': 'preko', 'preka': 'preka', 'preke': 'preke', 'preku': 'preku', 'preki': 'preki', 'prekog': 'prekog', 'prekom': 'prekom'}
+    },
+    {
+        'ekavski': {'slede', 'sledi', 'slediti', 'sledile', 'sledila', 'sledilo', 'sledili'},
+        'kljucevi1': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
+        'kljucevi2': ['krv', 'strah', 'užas', 'šok', 'hladnoć', 'mraz', 'led', 'pogled'],
+        'mape_grupa1': {'slede': 'slijede', 'sledi': 'slijedi', 'slediti': 'slijediti', 'sledile': 'slijedile', 'sledila': 'slijedila', 'sledilo': 'slijedilo', 'sledili': 'slijedili'},
+        'mape_grupa2': {'slede': 'slede', 'sledi': 'sledi', 'slediti': 'slediti', 'sledila': 'sledila', 'sledilo': 'sledilo', 'sledili': 'sledili'}
+    },
+    {
+        'ekavski': {'sledeća', 'sledeći', 'sledeće', 'sledeću', 'sledećih', 'sledećem', 'sledećog', 'sledećima'},
+        'kljucevi1': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
+        'kljucevi2': ['pacijent', 'bolesnik', 'kandidat', 'učenik', 'kupac', 'gost', 'putnik', 'čovjek', 'čovek', 'voz', 'autobus', 'let', 'polazak', 'tokom'],
+        'mape_grupa1': {'sledeća': 'slijedeća', 'sledeći': 'slijedeći', 'sledeće': 'slijedeće', 'sledeću': 'slijedeću', 'sledećih': 'slijedećih', 'sledećem': 'slijedećem', 'sledećog': 'slijedećeg', 'sledećima': 'slijedećima'},
+        'mape_grupa2': {'sledeća': 'sljedeća', 'sledeći': 'sljedeći', 'sledeće': 'sljedeće', 'sledeću': 'sljedeću', 'sledećih': 'sljedećih', 'sledećem': 'sljedećem', 'sledećog': 'sljedećem', 'sledećima': 'sljedećima'}
     }
-}
-,
-{
-    'ekavski': ['sledeća','sledeći','sledeće','sledeću','sledećih'],
-    'kljucevi1': ['primjer', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
-    'kljucevi2':['pacijent', 'bolesnik', 'kandidat', 'učenik', 'kupac', 'gost', 'putnik', 'čovjek','čovek','voz','autobus','čovjek','let','polazak','tokom'] ,
-    'mape_grupa1': {'sledeća': 'slijedeća','sledeći': 'slijedeći','sledećih': 'slijedećih'},
-    'mape_grupa2': {'sledeća': 'sljedeća','sledeći': 'sljedeći','sledeće': 'sljedeće','sledeću': 'sljedeću','sledećih': 'sljedećih'},
-
-}
 ]
 
 
-IMENA_IZUZECI_KORIJENI = ['vera','veri','veru','sedić', 'seden', 'sedlar', 'razbolović', 'slepčević','unesk']
+def da_li_je_pocetak_recenice(t, pos):
+    p = t[:pos].strip()
+    return not p or p[-1] in {'.', '!', '?', '\n', '"', '„', '(', '['}
 
-IZUZECI_VELIKO_SLOVO = ['Nemci', 'Nemcima', 'Nemaca','Svetsko', 'Svetskom']
-
-
-# =====================================================================
-# POMOĆNE REGEX FUNKCIJE I INICIJALIZACIJA
-# =====================================================================
-
-def _wb(rijec): 
-    return re.compile(r'(?<![^\W\d_])' + re.escape(rijec) + r'(?![^\W\d_])', re.UNICODE | re.IGNORECASE)
-
-def _stem(korijen): 
-    return re.compile(r'(?<![^\W\d_])(' + re.escape(korijen) + r')(\w*)', re.UNICODE | re.IGNORECASE)
-
-_EXACT = [(_wb(e), e, i) for e, i in EXACT]
-_STEMS = [(_stem(e), e, i) for e, i in STEMS]
-
-def da_li_je_pocetak_recenice(tekst, pozicija):
-    p = tekst[:pozicija].strip()
-    return True if not p or p[-1] in ['.', '!', '?', '\n', '"', '„', '(', '['] else False
-
-def _sacuvaj_velika_slova(izvorna, zamjena, sufiks=""):
-    if izvorna.isupper(): return zamjena.upper() + sufiks.upper()
-    if izvorna.istitle(): return zamjena.capitalize() + sufiks
-    return zamjena + sufiks
-
-# =====================================================================
-# LOGIKA PREVOĐENJA (EXACT, STEMS, KONTEKST PROZOR)
-# =====================================================================
+def _sacuvaj_velika_slova(izv, zam, suf=""):
+    if izv.isupper(): return zam.upper() + suf.upper()
+    return zam.capitalize() + suf if izv.istitle() else zam + suf
 
 def _primijeni_exact(tekst):
-    for pat, e, i in _EXACT:
-        def _r(m):
-            s = m.group(0)
-            if da_li_je_pocetak_recenice(tekst, m.start()):
-                if any(s.lower().startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
-                    return s
-            return s if (s[0].isupper() and not da_li_je_pocetak_recenice(tekst, m.start())) else _sacuvaj_velika_slova(s, i)
-        tekst = pat.sub(_r, tekst)
-    return tekst
+    if not _EXACT_RE: return tekst
+    def _r(m):
+        s, s_low = m.group(1), m.group(1).lower()
+        is_start = da_li_je_pocetak_recenice(tekst, m.start())
+        if is_start and any(s_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI): return m.group(0)
+        return m.group(0) if (s[0].isupper() and not is_start) else _sacuvaj_velika_slova(s, EXACT_DICT[s_low])
+    return _EXACT_RE.sub(_r, tekst)
 
 def _primijeni_stems(tekst):
-    TACNA_IMENA = ['vera', 'veri', 'veru']
-    KORIJENI_PREZIMENA = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
-    TEHNICKI_IZUZECI = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
-    
-    for pat, e, i in _STEMS:
-        def _r(m):
-            s, suf = m.group(1), m.group(2)
-            puna_rec = (s + suf).lower()
-            
-            if da_li_je_pocetak_recenice(tekst, m.start()):
-                if puna_rec in TACNA_IMENA or any(puna_rec.startswith(k) for k in KORIJENI_PREZIMENA):
-                    return m.group(0)
-                    
-            if any(puna_rec.startswith(izuzetak) for izuzetak in TEHNICKI_IZUZECI):
-                return m.group(0)
-                
-            if s.isupper() and not da_li_je_pocetak_recenice(tekst, m.start()):
-                if (s + suf) in IZUZECI_VELIKO_SLOVO:
-                    return m.group(0)
-                
-            return _sacuvaj_velika_slova(s, i, suf)
-            
-        tekst = pat.sub(_r, tekst)
-    return tekst
+    if not _STEMS_RE: return tekst
+    T_IMENA, K_PREZ, T_IZUZ = {'vera', 'veri', 'veru'}, ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević'], ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
+    def _r(m):
+        s, suf = m.group(1), m.group(2)
+        s_low = s.lower()
+        puna = (s + suf).lower()
+        is_start = da_li_je_pocetak_recenice(tekst, m.start())
+        if (is_start and (puna in T_IMENA or any(puna.startswith(k) for k in K_PREZ))) or any(puna.startswith(i) for i in T_IZUZ): return m.group(0)
+        if s.isupper() and not is_start and (s + suf) in IZUZECI_VELIKO_SLOVO: return m.group(0)
+        return _sacuvaj_velika_slova(s, STEMS_DICT[s_low], suf)
+    return _STEMS_RE.sub(_r, tekst)
 
 def _primijeni_kontekst_prozor(tekst):
-    recenice = re.split(r'([.!?\n]+)', tekst)
-    novi_djelovi = []
-    
-    for recenica in recenice:
-        if not recenica.strip() or re.match(r'^[...!?\n]+$', recenica):
-            novi_djelovi.append(recenica)
+    novi_delovi = []
+    for rec in re.split(r'([.!?\n]+)', tekst):
+        if not rec.strip() or re.match(r'^[...!?\n]+$', rec):
+            novi_delovi.append(rec)
             continue
-            
-        tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.UNICODE)
-        idx_p = [idx for idx, t in enumerate(tokeni) if re.match(r'^[^\W\d_]+$', t)]
-        okolina = recenica.lower()
-        
+        tok, okol = re.split(r'([^\W\d_]+)', rec, flags=re.U), rec.lower()
+        idx_p = [idx for idx, t in enumerate(tok) if re.match(r'^[^\W\d_]+$', t)]
         for i, t_idx in enumerate(idx_p):
-            trenutna_rijec = tokeni[t_idx]
-            rijec_lower = trenutna_rijec.lower()
-            
-            if i == 0 and any(rijec_lower.startswith(korijen) for korijen in IMENA_IZUZECI_KORIJENI):
-                continue
-                
-            for mapa in KONTEKST_MAPE:
-                if rijec_lower in mapa['ekavski']:
-                    skor1 = sum(1 for k in mapa['kljucevi1'] if k in okolina)
-                    skor2 = sum(1 for k in mapa['kljucevi2'] if k in okolina)
-       
-                    if skor1 > skor2:
-                        baza_zamjene = mapa['mape_grupa1']
-                    else:
-                        baza_zamjene = mapa['mape_grupa2']
-                    
-                    if rijec_lower in baza_zamjene:
-                        tokeni[t_idx] = _sacuvaj_velika_slova(trenutna_rijec, baza_zamjene[rijec_lower])
-                        
-        novi_djelovi.append("".join(tokeni))
-        
-    return "".join(novi_djelovi)
-# =====================================================================
-# PRESLOVLJAVANJE (ĆIRILICA <-> LATINICA)
-# =====================================================================
+            tr, r_low = tok[t_idx], tok[t_idx].lower()
+            if i == 0 and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI): continue
+            for m in KONTEKST_MAPE:
+                if r_low in m['ekavski']:
+                    baza = m['mape_grupa1'] if sum(1 for k in m['kljucevi1'] if k in okol) > sum(1 for k in m['kljucevi2'] if k in okol) else m['mape_grupa2']
+                    if r_low in baza: tok[t_idx] = _sacuvaj_velika_slova(tr, baza[r_low])
+        novi_delovi.append("".join(tok))
+    return "".join(novi_delovi)
+
 
 def cirilica_u_latinicu(tekst):
-    mapa_cir_lat = {
-        'Љ': 'Lj', 'Њ': 'Nj', 'Џ': 'Dž', 'љ': 'lj', 'њ': 'nj', 'џ': 'dž',
-        'А': 'A', 'а': 'a', 'Б': 'B', 'б': 'b', 'В': 'V', 'в': 'v',
-        'Г': 'G', 'г': 'g', 'Д': 'D', 'д': 'd', 'Ђ': 'Đ', 'ђ': 'đ',
-        'Е': 'E', 'е': 'e', 'Ж': 'Ž', 'ж': 'ž', 'З': 'Z', 'з': 'z',
-        'И': 'I', 'и': 'i', 'Ј': 'J', 'ј': 'j', 'K': 'K', 'к': 'k',
-        'Л': 'L', 'л': 'l', 'М': 'M', 'м': 'm', 'Н': 'N', 'н': 'n',
-        'О': 'O', 'о': 'o', 'П': 'P', 'п': 'p', 'Р': 'R', 'р': 'r',
-        'С': 'S', 'с': 's', 'Т': 'T', 'т': 't', 'Ћ': 'Ć', 'ћ': 'ć',
-        'У': 'U', 'у': 'u', 'Ф': 'F', 'ф': 'f', 'Х': 'H', 'х': 'h',
-        'Ц': 'C', 'ц': 'c', 'Č': 'Č', 'č': 'č', 'Ш': 'Š', 'š': 'š'
-    }
-    return "".join(mapa_cir_lat.get(c, c) for c in tekst)
+    m = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Č':'Č','č':'č','Ш':'Š','š':'š','Ч':'Č','ч':'č'}
+    return "".join(m.get(c, c) for c in tekst)
 
 def latinica_u_cirilicu(tekst):
-    za_zamjenu = [
-        ('lj', 'љ'), ('nj', 'њ'), ('dž', 'џ'), 
-        ('Lj', 'Љ'), ('Nj', 'Њ'), ('Dž', 'Џ'),
-        ('LJ', 'Љ'), ('NJ', 'Њ'), ('DŽ', 'Џ')
-    ]
-    for lat, cir in za_zamjenu:
-        tekst = tekst.replace(lat, cir)
-        
-    mapa_lat_cir = {
-        'A': 'А', 'a': 'а', 'B': 'Б', 'b': 'б', 'V': 'В', 'v': 'в',
-        'G': 'Г', 'g': 'г', 'D': 'Д', 'd': 'д', 'Đ': 'Ђ', 'đ': 'ђ',
-        'E': 'Е', 'e': 'е', 'Ž': 'Ж', 'ž': 'ж', 'Z': 'З', 'z': 'з',
-        'I': 'И', 'i': 'и', 'J': 'Ј', 'j': 'ј', 'K': 'К', 'k': 'к',
-        'L': 'Л', 'l': 'л', 'M': 'М', 'm': 'м', 'N': 'Н', 'n': 'н',
-        'O': 'О', 'o': 'о', 'P': 'П', 'p': 'п', 'R': 'Р', 'r': 'р',
-        'S': 'С', 's': 'с', 'T': 'Т', 't': 'т', 'Ć': 'Ћ', 'ć': 'ћ',
-        'U': 'У', 'u': 'у', 'F': 'Ф', 'f': 'ф', 'H': 'Х', 'h': 'х',
-        'C': 'Ц', 'c': 'ц', 'Č': 'Č', 'č': 'č', 'Š': 'Ш', 'š': 'ш'
-    }
-    return "".join(mapa_lat_cir.get(c, c) for c in tekst)
+    for lat, cir in [('lj','љ'),('nj','њ'),('dž','џ'),('Lj','Љ'),('Nj','Њ'),('Dž','Џ'),('LJ','Љ'),('NJ','Њ'),('DŽ','Џ')]: tekst = tekst.replace(lat, cir)
+    m = {'A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','У':'У','у':'у','Ф':'Ф','ф':'ф','Х':'Х','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','u':'у','f':'ф','F':'Ф','U':'У','j':'ј','J':'Ј'}
+    return "".join(m.get(c, c) for c in tekst)
+
+
 
 def zamijeni_rijeci(tekst):
-    if not tekst:
-        return tekst
-        
-    cirilica_skup = set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш')
-    
-    # PROVJERA: Da li u cijelom tekstu ima makar jedno ćirilično slovo
-    ima_cirilice = any(c in cirilica_skup for c in tekst)
-    
-    if ima_cirilice:
-        tekst = cirilica_u_latinicu(tekst)
-        
+    if not tekst: return tekst
+    je_cirilica = (tekst.lstrip() or [""])[0] in set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш')
+    if je_cirilica: tekst = cirilica_u_latinicu(tekst)
     tekst_ijekavski = _primijeni_kontekst_prozor(_primijeni_stems(_primijeni_exact(tekst)))
-    
-    if ima_cirilice:
-        return latinica_u_cirilicu(tekst_ijekavski)
-        
-    return tekst_ijekavski
+    return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
 
 
 @anvil.server.callable
-def ijekavizuj_tekst(ulazni_tekst):
-    if not ulazni_tekst:
-        return ""
-    try:
-        return zamijeni_rijeci(ulazni_tekst)
-    except Exception as greska:
-        print(f"Greška pri obradi teksta: {greska}")
-        return ulazni_tekst
+def ijekavizuj_tekst(ulaz):
+    try: return zamijeni_rijeci(ulaz) if ulaz else ""
+    except Exception as e: print(f"Greška: {e}"); return ulaz
