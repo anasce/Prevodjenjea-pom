@@ -636,5 +636,5 @@ def zamijeni_rijeci(tekst):
 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
-    try: return zamijeni_rijeci(ulaz) if ulaz else ""
-    except Exception as e: print(f"Greška: {e}"); return ulaz
+    try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
+    except Exception as e: print(f"Greška: {e}"); return ulazni_tekst
