@@ -634,7 +634,17 @@ def zamijeni_rijeci(tekst):
     return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
 
 
+import time
+
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
-    try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
-    except Exception as e: print(f"Greška: {e}"); return ulazni_tekst
+    t0 = time.perf_counter()
+    try:
+        rezultat = zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
+        ms = (time.perf_counter() - t0) * 1000
+        print(f"Server obrada: {ms:.2f} ms")
+        return rezultat
+    except Exception as e:
+        print(f"Greška: {e}")
+        return ulazni_tekst
+
