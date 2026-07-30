@@ -1,14 +1,13 @@
 <anvil-form layout="Prevo_enje_ei.Layouts.BaseLayout">
-  <anvil-block slot="actions"></anvil-block>
+  <anvil-block slot="actions">
+    <anvil-component type="Label" name="label_1" prop:role="h1" prop:text="E2I PREVODILAC"></anvil-component>
+    <anvil-component type="Label" name="label_2" prop:role="subheading" prop:text="Konvertor ekavice u ijekavicu"></anvil-component>
+  </anvil-block>
   <anvil-block slot="content">
     <anvil-component type="ColumnPanel" name="column_panel_1" prop:role="card"></anvil-component>
-    <anvil-component type="TextArea" name="text_area_1" prop:text="ekavski"></anvil-component>
-    <anvil-component type="Timer" name="timer_1"></anvil-component>
-    <anvil-component type="Button" name="button_1" prop:text="" prop:icon="fa:caret-right"></anvil-component>
-    <anvil-component type="TextArea" name="text_area_2" prop:text="ijekavski"></anvil-component>
-    <anvil-component type="Link" name="link_1"></anvil-component>
+    <anvil-component type="TextArea" name="text_area_1" prop:placeholder="Unesite ekavski tekst ovdje..."></anvil-component>
+    <anvil-component type="Button" name="button_1" prop:text="Prevedi" prop:icon="fa:angle-right"></anvil-component>
+    <anvil-component type="TextArea" name="text_area_2" prop:placeholder="Ijekavski rezultat..."></anvil-component>
   </anvil-block>
-  <anvil-block slot="title">
-    <anvil-component type="Label" name="label_1" prop:role="h1" prop:text="Home"></anvil-component>
-  </anvil-block>
+  <anvil-block slot="title"></anvil-block>
 </anvil-form>
