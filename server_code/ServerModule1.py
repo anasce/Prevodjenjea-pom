@@ -745,10 +745,8 @@ def a_datoteku(ulaz, izlaz):
     with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
     print(f"Završeno: '{ulaz}' -> '{izlaz}'")
 
-if __name__ == "__main__":
-    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
+@anvil.server.callable
+def ijekavizuj_tekst(ulazni_tekst):
+    try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
+    except Exception as e: print(f"Greška: {e}"); return ulazni_tekst
 
-
-if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        obradi_datoteku(sys.argv[1], sys.argv[2])
