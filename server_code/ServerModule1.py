@@ -1,6 +1,6 @@
 
-# E2I PREVODILAC
-# Konvertor ekavice u ijekavicu
+#E2I PREVODILAC
+#Konvertor ekavice u ijekavicu
 import sys, os, re 
 import anvil.server
 
@@ -815,6 +815,6 @@ if __name__ == "__main__":
 
 
 @anvil.server.callable
-def ijekavizuj_tekst(ulaz):
-    try: return zamijeni_rijeci(ulaz) if ulaz else ""
-    except Exception as e: print(f"Greška: {e}"); return ulaz
+def ijekavizuj_tekst(ulazni_tekst):
+    try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
+    except Exception as e: print(f"Greška: {e}"); return ulazni_tekst
