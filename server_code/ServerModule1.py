@@ -4,8 +4,20 @@
 import sys, os, re 
 import anvil.server
 
-EXACT = {
 
+
+EXACT = {
+    #fraze
+    'Bela kraljica': 'Bijela kraljica',
+    'Bele kraljice': 'Bijele kraljice',
+    'Mlečni put': 'Mlječni put',
+    'Veće Evrope': 'Vijeće Evrope',
+    'Savet Evrope': 'Savjet Evrope',
+    'Savet bezbednosti UN ': 'Savjet bezbjednosti UN',
+    'Savet za ljudska prava UN': 'Savjet za ljudska prava UN',
+    'Savet Evropske unije': 'Savjet Evropske unije',
+
+    #riječi 
     'pretrpeo': 'pretrpio',
     'razboleo': 'razbolio',
     'svetlost': 'svjetlost',
@@ -23,11 +35,7 @@ EXACT = {
     'rečima': 'riječima',
     'svideo': 'svidio',
     'uvideo': 'uvidio',
-    'zaseda': 'zasjeda',
-    'zasedu': 'zasjedu',
-    'zasedi': 'zasjedi',
-    'zasede': 'zasjede',
-    'zasedama': 'zasjedama',
+    'zamena': 'zamjena',
     'doneo': 'donio',
     'nigde': 'nigdje',
     'odneo': 'odnio',
@@ -35,6 +43,7 @@ EXACT = {
     'rekao': 'rekao',
     'rekla': 'rekla',
     'rečju': 'riječji',
+    'sečiv': 'sječiv',
     'sreda': 'srijeda',
     'svest': 'svijest',
     'uspeo': 'uspio',
@@ -58,9 +67,13 @@ EXACT = {
     'reči': 'riječi',
     'smeo': 'smio',
     'tela': 'tijela',
+    'telo': 'tijelo',
+    'telu': 'tijelu',
     'umeo': 'umio',
     'uvek': 'uvijek',
     'uvid': 'uvid',
+    'veka': 'vijeka',
+    'veku': 'vijeku',
     'vide': 'vide',
     'vole': 'vole',
     'žele': 'žele',
@@ -75,6 +88,7 @@ EXACT = {
     'reč': 'riječ',
     'sme': 'smije',
     'ume': 'umije',
+    'vek': 'vijek',
 
 }
 
@@ -113,6 +127,7 @@ STEMS = {
     'pretrpel': 'pretrpjel',
     'prosveti': 'prosvjeti',
     'ravnomer': 'ravnomjer',
+    'razrešenj': 'razrješenj',
     'tromeseč': 'tromjeseč',
     'verovatn': 'vjerovatn',
     'zakasnel': 'zakašnjel',
@@ -180,7 +195,6 @@ STEMS = {
     'umetnik': 'umjetnik',
     'unapređ': 'unaprjeđ',
     'zabelež': 'zabiljež',
-    'zahteva': 'zahtijeva',
     'zaplena': 'zapljena',
     'zaplene': 'zapljene',
     'zapleni': 'zaplijeni',
@@ -257,6 +271,7 @@ STEMS = {
     'saoseć': 'saosjeć',
     'saposl': 'zaposlj',
     'savest': 'savjest',
+    'sednic': 'śednic',
     'sedišt': 'sjedišt',
     'semest': 'semest',
     'smatra': 'smatra',
@@ -275,7 +290,7 @@ STEMS = {
     'verova': 'vjerova',
     'vremen': 'vremen',
     'zahtev': 'zahtjev',
-    'zamenj': 'zamijenj',
+    'zamenj': 'zamjenj',
     'zaplen': 'zaplijen',
     'zapose': 'zaposje',
     'zaposl': 'zapošlj',
@@ -424,7 +439,6 @@ STEMS = {
     'videv': 'vidjev',
     'zamen': 'zamijen',
     'zamer': 'zamjer',
-    'zased': 'zasijed',
     'zaver': 'zavjer',
     'zvezd': 'zvijezd',
     'čovek': 'čovjek',
@@ -455,6 +469,7 @@ STEMS = {
     'deci': 'deci',
     'deča': 'dječa',
     'dečj': 'dječij',
+    'dole': 'dolje',
     'done': 'donije',
     'dozv': 'dozv',
     'dvem': 'dvjem',
@@ -510,6 +525,7 @@ STEMS = {
     'smeš': 'smiješ',
     'sneg': 'snijeg',
     'sten': 'stijen',
+    'sutr': 'śutr',
     'svež': 'svjež',
     'teme': 'tjeme',
     'tera': 'tjera',
@@ -530,7 +546,7 @@ STEMS = {
     'vest': 'vijest',
     'vetr': 'vjetr',
     'veća': 'veća',
-    'veće': 'veće',
+    #'veće': 'veće',
     'veći': 'veći',
     'vešt': 'vješt',
     'vole': 'volje',
@@ -567,7 +583,6 @@ STEMS = {
     'seć': 'sjeć',
     'tel': 'tijel',
     'ume': 'umje',
-    'vek': 'vijek',
     'ver': 'vjer',
 
 }
@@ -606,9 +621,9 @@ KONTEKST_MAPE = [
         'mape_grupa1': {'selo': 'sjelo', 'sela': 'sjela', 'selu': 'sjelu', 'selom': 'sjelom', 'selima': 'sjelima'}
     },
     {
-        'ekavski': {'dela', 'delu', 'delo', 'delima', 'delom',  'delvima'},
+        'ekavski': {'dela', 'delu', 'delo', 'delima', 'delom',  'delovima'},
         'kljucevi2': ['značajn', 'sabran', 'knjig', 'pisac', 'umetnik', 'umjetnik', 'stvor', 'autor', 'opus', 'bibliotek', 'kažnj', 'režis'],
-        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl'],
+        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl', 'posl', 'cent', 'donj'],
         'mape_grupa2': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima', 'delom': 'djelom'},
         'mape_grupa1': {'dela': 'dijela', 'delu': 'dijelu',  'delovima': 'djelovima', 'delom': 'dijelom'}
     },
@@ -686,7 +701,23 @@ KONTEKST_MAPE = [
         'kljucevi2': [  'sunc', 'vruć', 'mor', 'vrel', 'odmo', 'plaž', 'žeg'],
         'mape_grupa1': {'letu': 'letu','leti': 'leti'},
         'mape_grupa2': {'letu': 'ljetu','leti': 'ljeti'}  
+    },
+       {
+        'ekavski': {'zaseda','zasede','zasedi','zasedama'},  
+        'kljucevi1': [ 'post','upas','ulet','ček','vreb','izb','prob','prip','organiz','zaskoč','napast','otkri','razb','vojn','polic','partiz','geril','noć','dnev','smrtonos','krvav','iznenad','neoček','neprij','protiv','zamk','klopk','kamuf','mask',],
+        'kljucevi2': [  'sav', 'kom', 'drup', 'sast', 'član', 'ljud', 'skup', 'vla', 'već', 'vijeć', 'sud', 'odb', 'kriz', 'šta', 'redov', 'jav', 'zatv'],
+        'mape_grupa1': {'zaseda': 'zasjeda','zasede': 'zasjede','zasedi': 'zasjedi','zasedama': 'zasjedama'},
+        'mape_grupa2': {'zaseda': 'zasijeda'}  
     }
+,
+       {
+        'ekavski': {'zahteva'},  
+        'kljucevi1': [ 'post','upas','ulet','ček','vreb','izb','prob','prip','organiz','zaskoč','napast','otkri','razb','vojn','polic','partiz','geril','noć','dnev','smrtonos','krvav','iznenad','neoček','neprij','protiv','zamk','klopk','kamuf','mask',],
+        'kljucevi2': [  'sav', 'kom', 'drup', 'sast', 'član', 'ljud', 'skup', 'vla', 'već', 'vijeć', 'sud', 'odb', 'kriz', 'šta', 'redov', 'jav', 'zatv'],
+        'mape_grupa1': {'zaseda': 'zasjeda','zasede': 'zasjede','zasedi': 'zasjedi','zasedama': 'zasjedama'},
+        'mape_grupa2': {'zaseda': 'zasijeda'}  
+    }
+
 
 ]
 
@@ -763,6 +794,17 @@ def procesiraj_recenicu(recenica, predlozak_tekst):
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
+    fraze = {k: v for k, v in EXACT.items() if ' ' in k}
+    fraze_sorted = sorted(fraze.keys(), key=len, reverse=True)
+    
+    def _zamijeni_frazu_match(match, zamjena):
+        pronadjeno = match.group(0)
+        if pronadjeno.isupper(): return zamjena.upper()
+        if pronadjeno.istitle():
+            izv_w, zam_w = pronadjeno.split(), zamjena.split()
+            return " ".join(z.capitalize() if i < len(izv_w) and izv_w[i].istitle() else z for i, z in enumerate(zam_w))
+        return zamjena
+
     linije = tekst.splitlines(keepends=True)
     procesuirane_linije = []
     cirilica_skup = set('АБВГДЂЕЖЗИЈКЛЉМНЊОПРСТЋУФХЦЧЏШабвгдђежзијклљмнњопрстћуфхцчџш')
@@ -776,6 +818,10 @@ def zamijeni_rijeci(tekst):
         je_cirilica = tekst_strip[0] in cirilica_skup
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
+        for fraza in fraze_sorted:
+            pattern = re.compile(r'\b' + re.escape(fraza) + r'\b', re.IGNORECASE)
+            trenutni_tekst = pattern.sub(lambda m, z=fraze[fraza]: _zamijeni_frazu_match(m, z), trenutni_tekst)
+        
         recenice = re.split(r'([.!?\n]+)', trenutni_tekst)
         novi_djelovi = []
         
@@ -786,13 +832,10 @@ def zamijeni_rijeci(tekst):
                 novi_djelovi.append(procesiraj_recenicu(dio, trenutni_tekst))
                 
         tekst_ijekavski = "".join(novi_djelovi)
-        
-        if je_cirilica:
-            procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski))
-        else:
-            procesuirane_linije.append(tekst_ijekavski)
+        procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski)
             
     return "".join(procesuirane_linije)
+
 
 def cirilica_u_latinicu(tekst):
     m = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š'}
@@ -802,15 +845,6 @@ def latinica_u_cirilicu(tekst):
     for l, c in [('lj','љ'),('nj','њ'),('dž','џ'),('Lj','Љ'),('Nj','Њ'),('Dž','Џ'),('LJ','Љ'),('NJ','Њ'),('DŽ','Џ')]: tekst = tekst.replace(l, c)
     m = {'A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','w':'њ'}
     return "".join(m.get(c, c) for c in tekst)
-
-def a_datoteku(ulaz, izlaz):
-    if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
-    with open(ulaz, encoding="utf-8") as f: t = f.read()
-    with open(izlaz, "w", encoding="utf-8") as f: f.write(zamijeni_rijeci(t))
-    print(f"Završeno: '{ulaz}' -> '{izlaz}'")
-
-if __name__ == "__main__":
-    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
 
 
 
