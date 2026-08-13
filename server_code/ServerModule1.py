@@ -3,20 +3,7 @@
 import sys, os, re 
 import anvil.server
 
-
-
 EXACT = {
-    #fraze
-    'Bela kraljica': 'Bijela kraljica',
-    'Bele kraljice': 'Bijele kraljice',
-    'Mlečni put': 'Mlječni put',
-    'Veće Evrope': 'Vijeće Evrope',
-    'Savet Evrope': 'Savjet Evrope',
-    'Savet bezbednosti UN ': 'Savjet bezbjednosti UN',
-    'Savet za ljudska prava UN': 'Savjet za ljudska prava UN',
-    'Savet Evropske unije': 'Savjet Evropske unije',
-
-    #riječi 
     'pretrpeo': 'pretrpio',
     'razboleo': 'razbolio',
     'svetlost': 'svjetlost',
@@ -34,7 +21,12 @@ EXACT = {
     'rečima': 'riječima',
     'svideo': 'svidio',
     'uvideo': 'uvidio',
-    'zamena': 'zamjena',
+    'zaseda': 'zasjeda',
+    'zasedu': 'zasjedu',
+    'zasedi': 'zasjedi',
+    'zasede': 'zasjede',
+    'zasedama': 'zasjedama',
+    'belima': 'bijelima',
     'doneo': 'donio',
     'nigde': 'nigdje',
     'odneo': 'odnio',
@@ -42,7 +34,6 @@ EXACT = {
     'rekao': 'rekao',
     'rekla': 'rekla',
     'rečju': 'riječji',
-    'sečiv': 'sječiv',
     'sreda': 'srijeda',
     'svest': 'svijest',
     'uspeo': 'uspio',
@@ -51,14 +42,30 @@ EXACT = {
     'vreme': 'vrijeme',
     'želeo': 'želio',
     'žudeo': 'žudio',
+    'bela': 'bijela',
+    'bele': 'bijele',
+    'beli': 'bijeli',
+    'belu': 'bijelu',
+    'belo': 'bijelo',
+    'cela': 'cijela',
+    'cele': 'cijele',
+    'celi': 'cijeli',
+    'celu': 'cijelu',
+    'celo': 'cijelo',
+    'celoj': 'cijeloj',
     'deci': 'djeci',
     'deda': 'djed',
     'dede': 'djedovi',
     'dele': 'dijele',
     'dete': 'dijete',
+    'dole': 'dolje',
     'hteo': 'htio',
     'leto': 'ljeto',
     'leta': 'ljeta',
+    'mera': 'mjera',
+    'meri': 'mjeri',
+    'mere': 'mjere',
+    'meru': 'mjeru',
     'neme': 'nijeme',
     'nemi': 'nijemi',
     'nemo': 'nijemo',
@@ -66,13 +73,9 @@ EXACT = {
     'reči': 'riječi',
     'smeo': 'smio',
     'tela': 'tijela',
-    'telo': 'tijelo',
-    'telu': 'tijelu',
     'umeo': 'umio',
     'uvek': 'uvijek',
     'uvid': 'uvid',
-    'veka': 'vijeka',
-    'veku': 'vijeku',
     'vide': 'vide',
     'vole': 'vole',
     'žele': 'žele',
@@ -82,30 +85,34 @@ EXACT = {
     'dev': 'djev',
     'dve': 'dvije',
     'lek': 'lijek',
+    'lep': 'lijep',
+    'lepa': 'lijepa',
+    'lepe': 'lijepe',
+    'lepi': 'lijepi',
+    'lepu': 'lijepu',
+    'lepo': 'lijepo',
+    'beo': 'bijel',
+    'leš': 'leš',
     'obe': 'obje',
     'pre': 'prije',
     'reč': 'riječ',
     'sme': 'smije',
     'ume': 'umije',
     'vek': 'vijek',
+    'veka': 'vijeka',
+    'veku': 'vijeku',
+
 
 }
 
 
 
 STEMS = {
-    'četvoromeseč': 'četvoromjeseč',
-    'desetomeseč': 'desetomjeseč',
-    'devetomeseč': 'devetomjeseč',
+ 
     'međuzvezdan': 'međuzvjezdan',
     'predstavnik': 'predstavnik',
-    'jednomeseč': 'jednomjeseč',
     'pretpostav': 'pretpostav',
-    'sedmomeseč': 'sedmmjeseč',
-    'šestomeseč': 'šestomjeseč',
     'najzahtev': 'najzahtjev',
-    'osmomeseč': 'osmoomjeseč',
-    'petomeseč': 'petomjeseč',
     'podrazume': 'podrazumije',
     'pravoverc': 'pravovjern',
     'presecanj': 'presijecanj',
@@ -113,7 +120,6 @@ STEMS = {
     'dodeljen': 'dodijeljen',
     'doprinos': 'doprinios',
     'dragocen': 'dragocjen',
-    'dvomeseč': 'dvomjeseč',
     'opredeli': 'opredijeli',
     'opredelj': 'opredjelj',
     'pomeranj': 'pomjeranj',
@@ -126,7 +132,6 @@ STEMS = {
     'pretrpel': 'pretrpjel',
     'prosveti': 'prosvjeti',
     'ravnomer': 'ravnomjer',
-    'razrešenj': 'razrješenj',
     'tromeseč': 'tromjeseč',
     'verovatn': 'vjerovatn',
     'zakasnel': 'zakašnjel',
@@ -194,11 +199,13 @@ STEMS = {
     'umetnik': 'umjetnik',
     'unapređ': 'unaprjeđ',
     'zabelež': 'zabiljež',
+    'zahteva': 'zahtijeva',
     'zaplena': 'zapljena',
     'zaplene': 'zapljene',
     'zapleni': 'zaplijeni',
     'zaplenu': 'zapljenu',
     'bekstv': 'bjekstv',
+    'bezbed': 'bezbjed',
     'cepnut': 'cjepnut',
     'dedukt': 'dedukt',
     'delima': 'djelima',
@@ -270,7 +277,6 @@ STEMS = {
     'saoseć': 'saosjeć',
     'saposl': 'zaposlj',
     'savest': 'savjest',
-    'sednic': 'śednic',
     'sedišt': 'sjedišt',
     'semest': 'semest',
     'smatra': 'smatra',
@@ -288,8 +294,9 @@ STEMS = {
     'verbal': 'verbal',
     'verova': 'vjerova',
     'vremen': 'vremen',
+    'zameni': 'zamijeni',
     'zahtev': 'zahtjev',
-    'zamenj': 'zamjenj',
+    'zamenj': 'zamijenj',
     'zaplen': 'zaplijen',
     'zapose': 'zaposje',
     'zaposl': 'zapošlj',
@@ -299,6 +306,7 @@ STEMS = {
     'belil': 'bjelil',
     'beleg': 'biljeg',
     'belež': 'biljež',
+    'belog': 'bjelog',
     'cedil': 'cjedil',
     'celin': 'cjelin',
     'celob': 'celob',
@@ -352,6 +360,7 @@ STEMS = {
     'lekov': 'ljekov',
     'liter': 'liter',
     'mesec': 'mjesec',
+    'meseč': 'mjeseč',
     'mešav': 'mješav',
     'model': 'model',
     'molek': 'molek',
@@ -393,6 +402,7 @@ STEMS = {
     'preti': 'prijeti',
     'rasej': 'rasijan',
     'rešav': 'rješav',
+    'sečiv': 'sječiv',
     'scena': 'scena',
     'sceni': 'sceni',
     'scenu': 'scenu',
@@ -436,8 +446,9 @@ STEMS = {
     'videl': 'vidjel',
     'videt': 'vidjet',
     'videv': 'vidjev',
-    'zamen': 'zamijen',
+    'zamen': 'zamjen',
     'zamer': 'zamjer',
+    'zased': 'zasijed',
     'zaver': 'zavjer',
     'zvezd': 'zvijezd',
     'čovek': 'čovjek',
@@ -458,7 +469,6 @@ STEMS = {
     'bled': 'blijed',
     'breg': 'brijeg',
     'cedi': 'cijedi',
-    'cel': 'cijel',
     'cena': 'cijena',
     'ceni': 'cijeni',
     'cent': 'cent',
@@ -468,7 +478,6 @@ STEMS = {
     'deci': 'deci',
     'deča': 'dječa',
     'dečj': 'dječij',
-    'dole': 'dolje',
     'done': 'donije',
     'dozv': 'dozv',
     'dvem': 'dvjem',
@@ -490,9 +499,9 @@ STEMS = {
     'levi': 'lijevi',
     'leve': 'lijeve',
     'levu': 'lijevu',
+    'lešn': 'lješn',
     'mehu': 'mjehu',
-    'meri': 'mjeri',
-    'mese': 'mjese',
+#    'mese': 'mjese',
     'mesn': 'mjesn',
     'mest': 'mjest',
     'meša': 'miješa',
@@ -524,7 +533,6 @@ STEMS = {
     'smeš': 'smiješ',
     'sneg': 'snijeg',
     'sten': 'stijen',
-    'sutr': 'śutr',
     'svež': 'svjež',
     'teme': 'tjeme',
     'tera': 'tjera',
@@ -545,7 +553,6 @@ STEMS = {
     'vest': 'vijest',
     'vetr': 'vjetr',
     'veća': 'veća',
-    #'veće': 'veće',
     'veći': 'veći',
     'vešt': 'vješt',
     'vole': 'volje',
@@ -555,7 +562,6 @@ STEMS = {
     'zver': 'zvijer',
     'žele': 'žele',
     'bed': 'bijed',
-    'bel': 'bijel',
     'cep': 'cijep',
     'cev': 'cijev',
     'čov': 'čovj',
@@ -566,10 +572,8 @@ STEMS = {
     'gde': 'gdje',
     'hte': 'htje',
     'len': 'lijen',
-    'lep': 'lijep',
     'les': 'ljes',
     'lev': 'lijev',
-    'leš': 'lješ',
     'mer': 'mjer',
     'meš': 'mješ',
     'mle': 'mlje',
@@ -586,15 +590,30 @@ STEMS = {
 
 }
 
+STEM_FRAZE = {
+ 
+    'Bel kraljic': 'Bijel kraljic',
+    'Bel kuć': 'Bijel kuć',
+    'Mlečn put': 'Mlječni put',
+    'Već Evrop': 'Vijeć Evrop',
+    'Savet Evrop': 'Savjet Evrop',
+    'Savet bezbednosti UN ': 'Savjet bezbjednosti UN',
+    'Savet za ljudska prava UN': 'Savjet za ljudska prava UN',
+    'Savet Evropske unije': 'Savjet Evropske unije',
 
-# Sortiranje po dužini zbog pohlepnog poklapanja korijena
+}
+
+FRAZE_PATTERNS = []
+fraze_iz_exact = {k: v for k, v in EXACT.items() if " " in k}
+FRAZE_PATTERNS = []
+for fraza, zamjena in sorted(fraze_iz_exact.items(), key=lambda x: len(x[0]), reverse=True):
+    pattern = re.compile(r"\b" + re.escape(fraza) + r"\b", re.IGNORECASE)
+    FRAZE_PATTERNS.append((pattern, zamjena))
+
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
+IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk"]
+IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
 
-IMENA_IZUZECI_KORIJENI = ['vera', 'veri', 'veru','vere','vero', 'sedić', 'seden', 'sedlar', 'slep', 'unesk','cvetk']
-IZUZECI_VELIKO_SLOVO = {'Nemci', 'Nemcima', 'Nemaca'}
-#T_IMENA = {'vera', 'veri', 'veru'}
-K_PREZ = ['sedić', 'seden', 'sedlar', 'razbolović', 'slepčević']
-#T_IZUZ = ['telefon', 'televiz', 'telegram', 'telefons', 'televizij', 'teleskop']
 
 KONTEKST_MAPE = [
     {
@@ -621,10 +640,11 @@ KONTEKST_MAPE = [
     },
     {
         'ekavski': {'dela', 'delu', 'delo', 'delima', 'delom',  'delovima'},
+        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl', 'posl', 'centr','donj'],
         'kljucevi2': ['značajn', 'sabran', 'knjig', 'pisac', 'umetnik', 'umjetnik', 'stvor', 'autor', 'opus', 'bibliotek', 'kažnj', 'režis'],
-        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl', 'posl', 'cent', 'donj'],
-        'mape_grupa2': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima', 'delom': 'djelom'},
-        'mape_grupa1': {'dela': 'dijela', 'delu': 'dijelu',  'delovima': 'djelovima', 'delom': 'dijelom'}
+        'mape_grupa1': {'dela': 'dijela', 'delu': 'dijelu',  'delovima': 'djelovima', 'delom': 'dijelom'},
+        'mape_grupa2': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima', 'delom': 'djelom'}
+
     },
     {
         'ekavski': {'veće', 'veća', 'veću', 'većim', 'većeg', 'većoj'},
@@ -700,38 +720,22 @@ KONTEKST_MAPE = [
         'kljucevi2': [  'sunc', 'vruć', 'mor', 'vrel', 'odmo', 'plaž', 'žeg'],
         'mape_grupa1': {'letu': 'letu','leti': 'leti'},
         'mape_grupa2': {'letu': 'ljetu','leti': 'ljeti'}  
-    },
-       {
-        'ekavski': {'zaseda','zasede','zasedi','zasedama'},  
-        'kljucevi1': [ 'post','upas','ulet','ček','vreb','izb','prob','prip','organiz','zaskoč','napast','otkri','razb','vojn','polic','partiz','geril','noć','dnev','smrtonos','krvav','iznenad','neoček','neprij','protiv','zamk','klopk','kamuf','mask',],
-        'kljucevi2': [  'sav', 'kom', 'drup', 'sast', 'član', 'ljud', 'skup', 'vla', 'već', 'vijeć', 'sud', 'odb', 'kriz', 'šta', 'redov', 'jav', 'zatv'],
-        'mape_grupa1': {'zaseda': 'zasjeda','zasede': 'zasjede','zasedi': 'zasjedi','zasedama': 'zasjedama'},
-        'mape_grupa2': {'zaseda': 'zasijeda'}  
     }
-,
-       {
-        'ekavski': {'zahteva'},  
-        'kljucevi1': [ 'post','upas','ulet','ček','vreb','izb','prob','prip','organiz','zaskoč','napast','otkri','razb','vojn','polic','partiz','geril','noć','dnev','smrtonos','krvav','iznenad','neoček','neprij','protiv','zamk','klopk','kamuf','mask',],
-        'kljucevi2': [  'sav', 'kom', 'drup', 'sast', 'član', 'ljud', 'skup', 'vla', 'već', 'vijeć', 'sud', 'odb', 'kriz', 'šta', 'redov', 'jav', 'zatv'],
-        'mape_grupa1': {'zaseda': 'zasjeda','zasede': 'zasjede','zasedi': 'zasjedi','zasedama': 'zasjedama'},
-        'mape_grupa2': {'zaseda': 'zasijeda'}  
-    }
-
 
 ]
 
-
-
-
-
-def _sacuvaj_velika_slova(izv, zam, suf=""):
-    if izv.isupper(): return zam.upper() + suf.upper()
-    return zam.capitalize() + suf if izv.istitle() else zam + suf
+def _sacuvaj_velika_slova(izv, zam):
+    if izv.isupper(): return zam.upper()
+    if izv.istitle(): return zam.capitalize()
+    return zam
 
 def a_rijec(rijec, is_start, okolni_tekst):
+    """Optimizovana obrada pojedinačne riječi."""
     r_low = rijec.lower()
-    if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
-        return rijec
+    if "e" not in r_low: return rijec
+
+    if not is_start and (rijec.istitle() or rijec.isupper()):
+        if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI): return rijec
 
     if r_low in EXACT:
         return rijec if (rijec.isupper() and not is_start) else _sacuvaj_velika_slova(rijec, EXACT[r_low])
@@ -752,27 +756,41 @@ def a_rijec(rijec, is_start, okolni_tekst):
         if korijen in r_low:
             if korijen == r_low:
                 return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-            
-            if len(korijen) < 4: continue
+            if len(korijen) < 4:
+                continue
             idx = r_low.find(korijen)
-            if (rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start: continue
-            if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: return rijec
-            
-            sufiks = r_low[idx + len(korijen):]
-            if korijen.endswith('e') and STEMS[korijen].endswith('e') and sufiks.startswith('o'):
+            if (
+                (rijec.istitle() or rijec.isupper())
+                and idx > 0
+                and not is_start
+            ):
+                continue
+            if (
+                rijec.isupper()
+                and not is_start
+                and rijec in IZUZECI_VELIKO_SLOVO
+            ):
+                return rijec
+            sufiks = r_low[idx + len(korijen) :]
+            if (
+                korijen.endswith("e")
+                and STEMS[korijen].endswith("e")
+                and sufiks.startswith("o")
+            ):
                 baza = STEMS[korijen]
-                for kraj in ['ije', 'je']:
+                for kraj in ["ije", "je"]:
                     if baza.endswith(kraj):
-                        baza = baza[:-len(kraj)]
+                        baza = baza[: -len(kraj)]
                         break
-                zamjena = _sacuvaj_velika_slova(rijec[idx:idx+len(korijen)+1], baza + 'io')
-                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
-            
-            zamjena = _sacuvaj_velika_slova(rijec[idx:idx+len(korijen)], STEMS[korijen])
-            return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
-                
+                zamjena = _sacuvaj_velika_slova(
+                    rijec[idx : idx + len(korijen) + 1], baza + "io"
+                )
+                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1 :]
+            zamjena = _sacuvaj_velika_slova(
+                rijec[idx : idx + len(korijen)], STEMS[korijen]
+            )
+            return rijec[:idx] + zamjena + rijec[idx + len(korijen) :]
     return rijec
-
 
 
 def procesiraj_recenicu(recenica, predlozak_tekst):
@@ -790,19 +808,40 @@ def procesiraj_recenicu(recenica, predlozak_tekst):
                 
     return "".join(tokeni)
 
+def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
+    pronadjeno = match.group(0)
+    ekavski_words = korijen_ekavski.split()
+    ijekavski_words = korijen_ijekavski.split()
+    
+    novi_djelovi = []
+    tokeni_meca = re.split(r'([^\W\d_]+)', pronadjeno, flags=re.U)
+    w_brojac = 0
+    
+    for tok in tokeni_meca:
+        if re.match(r'^[^\W\d_]+$', tok) and w_brojac < len(ekavski_words):
+            izv_w = tok
+            ek_w = ekavski_words[w_brojac]
+            ij_w = ijekavski_words[w_brojac]
+            
+            # Izvlačenje i čuvanje padežnog nastavka
+            nastavak = izv_w[len(ek_w):]
+            
+            if izv_w.isupper():
+                zamijenjena_riječ = ij_w.upper() + nastavak.upper()
+            elif izv_w.istitle():
+                zamijenjena_riječ = ij_w.capitalize() + nastavak
+            else:
+                zamijenjena_riječ = ij_w + nastavak
+                
+            novi_djelovi.append(zamijenjena_riječ)
+            w_brojac += 1
+        else:
+            novi_djelovi.append(tok)
+            
+    return "".join(novi_djelovi)
+
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
-    
-    fraze = {k: v for k, v in EXACT.items() if ' ' in k}
-    fraze_sorted = sorted(fraze.keys(), key=len, reverse=True)
-    
-    def _zamijeni_frazu_match(match, zamjena):
-        pronadjeno = match.group(0)
-        if pronadjeno.isupper(): return zamjena.upper()
-        if pronadjeno.istitle():
-            izv_w, zam_w = pronadjeno.split(), zamjena.split()
-            return " ".join(z.capitalize() if i < len(izv_w) and izv_w[i].istitle() else z for i, z in enumerate(zam_w))
-        return zamjena
 
     linije = tekst.splitlines(keepends=True)
     procesuirane_linije = []
@@ -817,9 +856,11 @@ def zamijeni_rijeci(tekst):
         je_cirilica = tekst_strip[0] in cirilica_skup
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
-        for fraza in fraze_sorted:
-            pattern = re.compile(r'\b' + re.escape(fraza) + r'\b', re.IGNORECASE)
-            trenutni_tekst = pattern.sub(lambda m, z=fraze[fraza]: _zamijeni_frazu_match(m, z), trenutni_tekst)
+        # PROCESIRANJE FRAZA IZ NOVOG RJEČNIKA
+        for pattern, zamjena in FRAZE_PATTERNS:
+           trenutni_tekst = pattern.sub(
+              lambda m, z=zamjena: _zamijeni_frazu_match(m, z), trenutni_tekst
+        )
         
         recenice = re.split(r'([.!?\n]+)', trenutni_tekst)
         novi_djelovi = []
@@ -846,7 +887,12 @@ def latinica_u_cirilicu(tekst):
     return "".join(m.get(c, c) for c in tekst)
 
 
-
+@anvil.server.callable
+def probudi_server():
+    # Ova funkcija namjerno ne radi ništa.
+    # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
+    pass
+ 
 @anvil.server.callable
 def ijekavizuj_tekst(ulazni_tekst):
     try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
