@@ -1,4 +1,4 @@
-#E2I PREVODILAC
+# E2I PREVODILAC
 #Konvertor ekavice u ijekavicu
 import sys, os, re 
 import anvil.server
