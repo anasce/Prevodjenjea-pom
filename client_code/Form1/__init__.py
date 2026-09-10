@@ -8,7 +8,7 @@ class Form1(Form1Template):
   def __init__(self, **properties):
     super().__init__(**properties)
     self.server_je_budan = False
-    self.header.visible = False
+    
 
   @handle("text_area_1", "change")
   def text_area_1_change(self, **event_args):
