@@ -3,9 +3,11 @@
 #import sys, os
 import re 
 import anvil.server
+#https://gorgeous-small-dog.anvil.app
 
 EXACT = {
     'novi dugacki pojam': 'novi prevod 1',
+    'zahtevima': 'zahtjevima',
 
     'pretrpeo': 'pretrpio',
     'razboleo': 'razbolio',
@@ -14,7 +16,14 @@ EXACT = {
 
     'doživeo': 'doživio',
     'poželeo': 'poželio',
+    'razmena': 'razmjena',
+    'razmenu': 'razmjenu',
+    'razmenom': 'razmjenom',
+    'razmenama': 'razmjenama',
     'verzija': 'verzija',
+    'zahteve': 'zahtjeve',
+    'zahtevu': 'zahtjevu',
+    'zahtevi': 'zahtjevi',
 
     'belima': 'bijelima',
     'celima': 'cijelima',
@@ -86,6 +95,7 @@ EXACT = {
     'neme': 'nijeme',
     'nemi': 'nijemi',
     'nemo': 'nijemo',
+    'nisu': 'nijesu',
     'plen': 'plijen',
     'reči': 'riječi',
     'smeo': 'smio',
@@ -122,6 +132,7 @@ EXACT = {
 
 
 STEMS = {
+    'drugostepen': 'drugostepen',
     'međuzvezdan': 'međuzvjezdan',
     'predstavnik': 'predstavnik',
 
@@ -133,6 +144,7 @@ STEMS = {
     'pravoverc': 'pravovjern',
     'presecanj': 'presijecanj',
     'razrešenj': 'razrješenj',
+    'sprečavanj': 'sprječavanj',
 
     'bezuspeš': 'bezuspješ',
     'dodeljen': 'dodijeljen',
@@ -151,8 +163,10 @@ STEMS = {
     'primenju': 'primjenju',
     'prosveti': 'prosvjeti',
     'ravnomer': 'ravnomjer',
+    'sporazum': 'sporazum',
     'tromeseč': 'tromjeseč',
     'verovatn': 'vjerovatn',
+    'zahtevat': 'zahtijevat',
     'zakasnel': 'zakašnjel',
     'zasenjen': 'zasjenjen',
     'zaveštan': 'zavještan',
@@ -204,14 +218,14 @@ STEMS = {
     'primeno': 'primjeno',
     'primenj': 'primijenj',
     'primeti': 'primijeti',
+    'privredn': 'privredn',
     'procena': 'procjena',
-    'procene': 'procjene',
-    'proceni': 'procijeni',
     'procenj': 'procjenj',
     'procenu': 'procjenu',
     'promeni': 'promijeni',
     'prosleđ': 'prosljeđ',
     'prosvet': 'prosvjet',
+    'punolet': 'punoljet',
     'rascepi': 'rascijepi',
     'rasejan': 'rasijan',
     'razbole': 'razbolje',
@@ -231,6 +245,7 @@ STEMS = {
     'zaplenu': 'zapljenu',
 
     'bekstv': 'bjekstv',
+    'belešk': 'bilješk',
     'bezbed': 'bezbjed',
     'cepnut': 'cjepnut',
     'dedukt': 'dedukt',
@@ -244,7 +259,7 @@ STEMS = {
     'gnezdo': 'gnijezdo',
     'grejat': 'grijat',
     'izgore': 'izgorje',
-    'izmen': 'izmjen',
+    'izmena': 'izmjena',
     'izvesn': 'izvjesn',
     'kolevk': 'kolijevk',
     'letarg': 'letarg',
@@ -252,9 +267,12 @@ STEMS = {
     'mleven': 'mljeven',
     'nalepi': 'nalijepi',
     'nalepn': 'naljepn',
+    'namenj': 'namijenj',
     'namešt': 'namješt',
     'nasled': 'naslijed',
     'nasmeš': 'nasmiješ',
+    'navest': 'navest',
+    'navode': 'navode',
     'nedelj': 'nedjelj',
     'nemošć': 'nijemošć',
     'neretk': 'nerijetk',
@@ -281,6 +299,7 @@ STEMS = {
     'predse': 'predsje',
     'predst': 'predst',
     'preduz': 'preduz',
+    'prenes': 'prenes',
     'preseć': 'presjeć',
     'prevar': 'prevar',
     'preživ': 'preživj',
@@ -298,7 +317,6 @@ STEMS = {
     'proter': 'protjer',
     'prover': 'provjer',
     'rascep': 'rascjep',
-    'razmen': 'razmijen',
     'razmer': 'razmjer',
     'raznež': 'raznjež',
     'razreš': 'razriješ',
@@ -306,14 +324,17 @@ STEMS = {
     'redosl': 'redoslj',
     'reklam': 'reklam',
     'rešenj': 'rješenj',
+    'revers': 'revers',
     'saoseć': 'saosjeć',
     'saposl': 'zaposlj',
     'savest': 'savjest',
+    'sečenj': 'sječenj',
     'sedišt': 'sjedišt',
     'semest': 'semest',
     'smatra': 'smatra',
     'smejat': 'smijat',
     'stalež': 'stalež',
+    'stepen': 'stepen',
     'strelj': 'strijelj',
     'svetlo': 'svjetlo',
     'svetsk': 'svjetsk',
@@ -327,7 +348,7 @@ STEMS = {
     'vernic': 'vjernic',
     'verova': 'vjerova',
     'vremen': 'vremen',
-    'zahtev': 'zahtjev',
+   # 'zahtev': 'zahtjev',
     'zameni': 'zamijeni',
     'zamenj': 'zamjenj',
     'zaplen': 'zaplijen',
@@ -362,6 +383,7 @@ STEMS = {
     'dečač': 'dječač',
     'dodel': 'dodjel',
     'donel': 'donijel',
+    'dones': 'dones',
     'greja': 'grija',
     'greši': 'griješi',
     'hlepč': 'hljepč',
@@ -435,8 +457,10 @@ STEMS = {
     'požel': 'poželj',
     'prene': 'prenije',
     'preti': 'prijeti',
+    'preve': 'preve',
     'rasej': 'rasijan',
     'rešav': 'rješav',
+    'rešen': 'riješen',
     'savet': 'savjet',
     'scena': 'scena',
     'scene': 'scene',
@@ -449,7 +473,6 @@ STEMS = {
     'sekir': 'śekir',
     'sever': 'śever',
     'sleta': 'slijeta',
-    'smeja': 'smija',
     'smeni': 'smijeni',
     'smenj': 'smjenj',
     'smest': 'smjest',
@@ -488,7 +511,7 @@ STEMS = {
     'videl': 'vidjel',
     'videt': 'vidjet',
     'videv': 'vidjev',
-    'vredn': 'vrjed',
+    'vredn': 'vrijedn',
     'vreme': 'vrijeme',
     'zamen': 'zamjen',
     'zamer': 'zamjer',
@@ -564,10 +587,12 @@ STEMS = {
     'ocen': 'ocjen',
     'odel': 'odijel',
     'odeć': 'odjeć',
+    'odse': 'odsje',
     'onde': 'ondje',
     'oset': 'osjet',
     'oseć': 'osjeć',
     'ovde': 'ovdje',
+    'over': 'ovjer',
     'pesm': 'pjesm',
     'pena': 'pjena',
     'peno': 'pjeno',
@@ -586,6 +611,7 @@ STEMS = {
     'seti': 'sjeti',
     'slep': 'slijep',
     'smeh': 'smijeh',
+    'smej': 'smij',
     'smel': 'smjel',
     'smen': 'smjen',
     'smer': 'smjer',
@@ -705,7 +731,7 @@ KONTEKST_MAPE = [
     },
     {
         'ekavski': {'dela', 'delu', 'delo', 'delima', 'delom',  'delovima'},
-        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl', 'posl', 'centr','donj'],
+        'kljucevi1': ['kuć', 'poslovn', 'prostor', 'imovin', 'zemljišt', 'plac', 'soba', 'sprat', 'zgrad', 'dvorišt', 'ispit', 'prijemn', 'završn', 'dipl', 'posl', 'centr','donj','ošte'],
         'kljucevi2': ['značajn', 'sabran', 'knjig', 'pisac', 'umetnik', 'umjetnik', 'stvor', 'autor', 'opus', 'bibliotek', 'kažnj', 'režis'],
         'mape_grupa1': {'dela': 'dijela', 'delu': 'dijelu',  'delovima': 'djelovima', 'delom': 'dijelom'},
         'mape_grupa2': {'dela': 'djela', 'delu': 'djelu', 'delo': 'djelo', 'delima': 'djelima', 'delom': 'djelom'}
@@ -748,11 +774,11 @@ KONTEKST_MAPE = [
 
     },
     {
-        'ekavski': {'sledeća', 'sledeći', 'sledeće', 'sledeću', 'sledećih', 'sledećem', 'sledećog', 'sledećima'},
+        'ekavski': {'sledeća', 'sledeći', 'sledeće', 'sledeću', 'sledećih', 'sledećem', 'sledećeg', 'sledećima'},
         'kljucevi1': ['prim', 'uputstv', 'pravil', 'savjet', 'savet', 'korak', 'trag', 'put', 'vođ', 'mentor'],
-        'kljucevi2': ['pacijent', 'bolesnik', 'kandidat', 'učenik', 'kupac', 'gost', 'putnik', 'čovjek', 'čovek', 'voz', 'autobus', 'let', 'polazak', 'tokom'],
-        'mape_grupa1': {'sledeća': 'slijedeća', 'sledeći': 'slijedeći', 'sledeće': 'slijedeće', 'sledeću': 'slijedeću', 'sledećih': 'slijedećih', 'sledećem': 'slijedećem', 'sledećog': 'slijedećeg', 'sledećima': 'slijedećima'},
-        'mape_grupa2': {'sledeća': 'sljedeća', 'sledeći': 'sljedeći', 'sledeće': 'sljedeće', 'sledeću': 'sljedeću', 'sledećih': 'sljedećih', 'sledećem': 'sljedećem', 'sledećog': 'sljedećem', 'sledećima': 'sljedećima'}
+        'kljucevi2': ['pacijent', 'bolesnik', 'kandidat', 'učenik', 'kupac', 'gost', 'putnik', 'čovjek', 'čovek', 'voz', 'autobus', 'let', 'polazak', 'tokom', 'poda'],
+        'mape_grupa1': {'sledeća': 'slijedeća', 'sledeći': 'slijedeći', 'sledeće': 'slijedeće', 'sledeću': 'slijedeću', 'sledećih': 'slijedećih', 'sledećem': 'slijedećem', 'sledećeg': 'slijedećeg', 'sledećima': 'slijedećima'},
+        'mape_grupa2': {'sledeća': 'sljedeća', 'sledeći': 'sljedeći', 'sledeće': 'sljedeće', 'sledeću': 'sljedeću', 'sledećih': 'sljedećih', 'sledećem': 'sljedećem', 'sledećeg': 'sljedećeg', 'sledećima': 'sljedećima'}
     }
 ,
     {
@@ -789,7 +815,7 @@ KONTEKST_MAPE = [
 ,
        {
         'ekavski': {'zahteva'},  
-        'kljucevi1': [ 'služb','zvanič','pism','opravd','neopravd','ponovlj','skromn','pretjer','nereal','podnij','predat','odobri','prihvat','odbi','odbac','uputi','povuć','razmotr','ispun','ugovolj','posebn','lice','rešav','rješav','izuzeć','posebnog'],
+        'kljucevi1': [ 'služb','zvanič','pism','opravd','neopravd','ponovlj','skromn','pretjer','nereal','podnij','predat','odobri','prihvat','odbi','odbac','uputi','povuć','razmotr','ispun','ugovolj','posebn','lice','rešav','rješav','izuzeć','posebnog','podnošenj','zaštit'],
         'kljucevi2': [  'pažnj', 'vrijem', 'trud', 'napor', 'odgovor', 'objašnj', 'prom','dokaz','prisustv','situa','pozic','posa','zadat','zakon','propis','zanimanj','struk','kupac','klijen','izrič','ozbilj','strog','dodatn'],
         'mape_grupa1': {'zahteva': 'zahtjeva'},
         'mape_grupa2': {'zahteva': 'zahtijeva'}  
@@ -797,10 +823,26 @@ KONTEKST_MAPE = [
 ,
        {
         'ekavski': {'izmene','izmeni'},  
-        'kljucevi1': [ 'potpun','koren','korijen','delimič','djelimič','značaj','bitn','minim','neznat','smest','naknad','unapre','unaprije','vrem','vrijem'],
-        'kljucevi2': [  'zakon','ustav','plan','budžet','pravilni','statut','ugovor','odluk','predlož','najavlj','usvoj','prihvać','neophod','značaj','krupn','kozmetič','minimal','ustavn','zakonsk','usvoj','izglas','predlož','inicir','razmatr'],
+        'kljucevi1': [ 'potpun','koren','korijen','delimič','djelimič','značaj','bitn','minim','neznat','smest','naknad','unapre','unaprije','vrem','vrijem','dopuni'],
+        'kljucevi2': [  'zakon','ustav','budžet','pravilni','statut','ugovor','odluk','predlož','najavlj','usvoj','prihvać','neophod','značaj','krupn','kozmetič','minimal','ustavn','zakonsk','usvoj','izglas','predlož','inicir','razmatr'],
         'mape_grupa1': {'izmene': 'izmijene','izmeni': 'izmijeni'},
         'mape_grupa2': {'izmene': 'izmjene','izmeni': 'izmjeni'}  
+    }
+,
+       {
+        'ekavski': {'razmene','razmeni'},  
+        'kljucevi1': ['reč','riječ','mišlj','utisk','telefon','kontakt','adres','poklon','nežn','nježn','pogled','novac','iskustv','među','brzo','srdačno','otvoren'],
+        'kljucevi2': [ 'mišljenj','stavov','idej','iskust','znanj','informac','poruk','mejl','pogled','studenat','učenik','profesor','dobara','roba','uslug','valut','novc','teritorij','zarobljenik','trgovin','ekonom','spoljnotrg','kultur','naučn','studentsk','intenziv','plodonosn','korisn','besplatn','fer','izvršit','obavit','pokrenut','organizov','učestvov','unapredit','unaprijedit','pospešit','pospješit'],
+        'mape_grupa1': {'razmene': 'razmijene','razmeni': 'razmijeni'},
+        'mape_grupa2': {'razmene': 'razmjene','razmeni': 'razmjeni'}  
+    }
+,
+       {
+        'ekavski': {'procene','proceni'},  
+        'kljucevi1': ['praviln','objektiv','realn','pogrešn','brzo','odokativ','situac','rizik','štet','vredn','vrijedn'],
+        'kljucevi2': [ 'prema','pri','stručnoj','prvoj','gruboj','pogrešnoj','osnovu','vještaka','štete','rizika','nalazi'],
+        'mape_grupa1': {'procene': 'procijene','proceni': 'procijeni'},
+        'mape_grupa2': {'procene': 'procjene','proceni': 'procjeni'}  
     }
 ]
 
@@ -965,6 +1007,8 @@ def latinica_u_cirilicu(tekst):
     for l, c in [('lj','љ'),('nj','њ'),('dž','џ'),('Lj','Љ'),('Nj','Њ'),('Dž','Џ'),('LJ','Љ'),('NJ','Њ'),('DŽ','Џ')]: tekst = tekst.replace(l, c)
     m = {'A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','w':'њ'}
     return "".join(m.get(c, c) for c in tekst)
+
+
 
 def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
