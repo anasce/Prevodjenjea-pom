@@ -1,4 +1,4 @@
-#E2I PREVODILAC 17
+r#E2I PREVODILAC 17
 #Konvertor ekavice u ijekavicu
 #import sys, os
 import re 
