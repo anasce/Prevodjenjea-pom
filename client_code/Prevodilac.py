@@ -910,15 +910,15 @@ def a_rijec(rijec, is_start, okolni_tekst):
 
     for korijen in STEMS_1_SORTED:
         if korijen in r_low:
-            # Koristimo zamjenu koja je bezbjedna za UTF-8 na serveru
             zamjenski_korijen = STEMS_1[korijen]
             
-            # Ako je cijela riječ jednaka korijenu
             if korijen == r_low: 
                 return _sacuvaj_velika_slova(rijec, zamjenski_korijen)
             
-            # Precizno mijenjamo samo taj dio unutar riječi, čuvajući velika/mala slova
-            r_low_zamijenjen = r_low.replace(korijen, zamjenski_korijen)
+            # --- POPRAVKA ZA ANVIL SERVER: Koristimo re.sub sa re.U ---
+            # Re.escape osigurava da se kvačica pravilno protumači, a re.U aktivira Unicode mod
+            r_low_zamijenjen = re.sub(re.escape(korijen), zamjenski_korijen, r_low, flags=re.U)
+            
             return _sacuvaj_velika_slova(rijec, r_low_zamijenjen)
 
 
@@ -945,6 +945,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
             zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
             return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
     return rijec
+
 def procesiraj_recenicu(recenica, predlozak_tekst):
     tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.U)
     sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[^\W\d_]+$', t)]
