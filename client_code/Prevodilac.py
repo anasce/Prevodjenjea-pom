@@ -940,18 +940,21 @@ def a_rijec(rijec, is_start, okolni_tekst):
             return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
     return rijec
 def procesiraj_recenicu(recenica, predlozak_tekst):
-    tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.U)
-    sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[^\W\d_]+$', t)]
-    is_start, idx = True, 0
+    # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
+    pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
     
+    tokeni = re.split(pattern, recenica)
+    sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', t)]
+    
+    is_start, idx = True, 0
     for i, tok in enumerate(tokeni):
-        if re.match(r'^[^\W\d_]+$', tok):
-            kontekst = " ".join(sve_rijeci[max(0, idx - 4):min(len(sve_rijeci), idx + 5)])
+        if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok):
+            kontekst = " ". join(sve_rijeci[max(0, idx - 4): min(len(sve_rijeci), idx + 5)])
             tokeni[i] = a_rijec(tok, is_start, kontekst)
             is_start, idx = False, idx + 1
         elif tok.strip() and any(c in tok for c in ['.', '!', '?', '\n']):
             is_start = True
-                
+            
     return "".join(tokeni)
 
 
@@ -961,7 +964,7 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     ijekavski_words = korijen_ijekavski.split()
     
     novi_djelovi = []
-    tokeni_meca = re.split(r'([^\W\d_]+)', pronadjeno, flags=re.U)
+        tokeni_meca = re.split(r'([a-zA-ZčćžšđČĆŽŠĐ]+)', pronadjeno)
     w_brojac = 0
     
     for tok in tokeni_meca:
