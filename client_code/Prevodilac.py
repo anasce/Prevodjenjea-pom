@@ -967,7 +967,7 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     w_brojac = 0
     
     for tok in tokeni_meca:
-        if re.match(r'^[^\W\d_]+$', tok) and w_brojac < len(ekavski_words):
+        if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok) and w_brojac < len(ekavski_words):
             izv_w = tok
             ek_w = ekavski_words[w_brojac]
             ij_w = ijekavski_words[w_brojac]
@@ -1004,8 +1004,15 @@ def zamijeni_rijeci(tekst):
         je_cirilica = prvo_slovo in cirilica_skup
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
-        for pattern, ekavski, zamjena in FRAZE_PATTERNS:
-            trenutni_tekst = pattern.sub(lambda m, e=ekavski, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
+        # Umjesto starog FRAZE_PATTERNS bloka, koristi ovaj fleksibilni za STEM_FRAZE:
+        for fraza, zamjena in STEM_FRAZE.items():
+            djelovi_fraze = fraza.split()
+            # Ovaj regex dopušta da svaka riječ u frazi ima proizvoljan nastavak (npr. -o, -ić, -oj, -i)
+            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(re.escape(w) for w in djelovi_fraze) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+            pattern = re.compile(pattern_str, re.IGNORECASE)
+            
+            trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
+
         
         novi_djelovi = []
         for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
