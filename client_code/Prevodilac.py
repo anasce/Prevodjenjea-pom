@@ -5,8 +5,6 @@ import re
 import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
-
-
 EXACT = {
     'novi dugacki pojam': 'novi prevod 1',
 
@@ -733,61 +731,6 @@ STEM_FRAZE = {
 
     'Bel kuć': 'Bijel kuć',
 }
-STEMS_1 = {
-
-    'najlepš': 'najljepš',
-    'osvedoč': 'osvjedoč',
-    'prosleđ': 'prosljeđ',
-    'unapređ': 'unaprjeđ',
-    'zabelež': 'zabiljež',
-    'menjač': 'mjenjač',
-    'nasmeš': 'nasmiješ',
-    'nemošć': 'nijemošć',
-    'obelež': 'obiljež',
-    'pešačk': 'pješačk',
-    'podseć': 'podsjeć',
-    'povređ': 'povrijeđ',
-    'preseć': 'presjeć',
-    'proleć': 'proljeć',
-    'proseč': 'prosječ',
-    'raznež': 'raznjež',
-    'razreš': 'razriješ',
-    'saoseć': 'saosjeć',
-    'stalež': 'stalež',
-    'zapreć': 'zaprijeć',
-    'belež': 'biljež',
-    'deleć': 'dijeleć',
-    'delić': 'djelić',
-    'dečač': 'dječač',
-    'hlepč': 'hljepč',
-    'izveš': 'izvješ',
-    'levič': 'ljevič',
-    'lečeć': 'liječeć',
-    'meseč': 'mjeseč',
-    'nemač': 'njemač',
-    'nemoć': 'nemoć',
-    'poseć': 'posjeć',
-    'sedeć': 'śedeć',
-    'spreč': 'spriječ',
-    'vodeć': 'vodeć',
-    'čoveč': 'čovječ',
-    'iseć': 'isjeć',
-    'obeš': 'obješ',
-    'odeć': 'odjeć',
-    'oseć': 'osjeć',
-    'smeš': 'smiješ',
-    'svež': 'svjež',
-    'ubeđ': 'ubjeđ',
-    'uneš': 'uneš',
-    'venč': 'vjenč',
-    'vređ': 'vrijeđ',
-    'deč': 'dječ',
-    'meš': 'mješ',
-    'ređ': 'rjeđ',
-    'reš': 'rješ',
-}
-
-# Naravno, izbriši ove stavke iz tvog glavnog STEMS rječnika da se ne bi duplirale.
 
 FRAZE_PATTERNS = []
 sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
@@ -797,7 +740,6 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse
 
 
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
-STEMS_1_SORTED = sorted(STEMS_1.keys(), key=len, reverse=True)
 IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi"]
 IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
 
@@ -981,37 +923,22 @@ def a_rijec(rijec, is_start, okolni_tekst):
 
     for korijen in STEMS_SORTED:
         if korijen in r_low:
-            if korijen == r_low: 
-                return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-            if len(korijen) < 4: 
-                continue
-            
-            baza_zamjene = STEMS[korijen]
+            if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
+            if len(korijen) < 4: continue
             idx = r_low.find(korijen)
+            if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): continue
             
-            # 1. Glagolski nastavci (npr. preneo -> prenio)
-            if korijen.endswith("e") and baza_zamjene.endswith("e") and r_low[idx + len(korijen):].startswith("o"):
-                baza_izvedena = baza_zamjene
+            sufiks = r_low[idx + len(korijen):]
+            if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
+                baza = STEMS[korijen]
                 for kraj in ["ije", "je"]:
-                    if baza_izvedena.endswith(kraj): 
-                        baza_izvedena = baza_izvedena[:-len(kraj)]
-                        break
-                baza_izvedena = baza_izvedena + "io"
+                    if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
+                zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
+                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
                 
-                korijen_len = len(korijen) + 1
-                zamjena = _sacuvaj_velika_slova(rijec[idx : idx + korijen_len], baza_izvedena)
-                return rijec[:idx] + zamjena + rijec[idx + korijen_len:]
-            
-            # 2. Standardna zamjena (Za "doživeti", "beleška" i sve ostale riječi sa kvačicama)
-            korijen_len = len(korijen)
-            zamjena = _sacuvaj_velika_slova(rijec[idx : idx + korijen_len], STEMS[korijen])
-            
-            # Čisto spajanje stringova preko indeksa koji su unapred fiksirani
-            return rijec[:idx] + zamjena + rijec[idx + korijen_len:]
-            
+            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
+            return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
     return rijec
-
-
 def procesiraj_recenicu(recenica, predlozak_tekst):
     tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.U)
     sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[^\W\d_]+$', t)]
