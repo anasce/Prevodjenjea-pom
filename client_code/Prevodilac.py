@@ -989,7 +989,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
             baza_zamjene = STEMS[korijen]
             idx = r_low.find(korijen)
             
-            # Provjera za specifične glagolske nastavke (npr. preneo -> prenio)
+            # 1. Specijalni slučaj za glagolske nastavke (npr. preneo -> prenio)
             if korijen.endswith("e") and baza_zamjene.endswith("e") and r_low[idx + len(korijen):].startswith("o"):
                 baza_izvedena = baza_zamjene
                 for kraj in ["ije", "je"]:
@@ -998,15 +998,18 @@ def a_rijec(rijec, is_start, okolni_tekst):
                         break
                 baza_izvedena = baza_izvedena + "io"
                 
-                # Bezbjedna zamjena preko Regexa sa čuvanjem velikih slova
-                pattern = re.compile(re.escape(korijen) + "o", re.IGNORECASE)
-                return pattern.sub(lambda m: _sacuvaj_velika_slova(m.group(0), baza_izvedena), rijec)
+                # Čista klijentska zamjena bez sječenja indeksa i bez lambda funkcija
+                staro_parce = rijec[idx : idx + len(korijen) + 1]
+                novo_parce = _sacuvaj_velika_slova(staro_parce, baza_izvedena)
+                return rijec.replace(staro_parce, novo_parce)
             
-            # Standardna zamjena korijena preko Regexa - sigurno za dijakritike (kvačice)
-            pattern = re.compile(re.escape(korijen), re.IGNORECASE)
-            return pattern.sub(lambda m: _sacuvaj_velika_slova(m.group(0), STEMS[korijen]), rijec)
+            # 2. Standardna zamjena korijena (sigurna za dijakritike / kvačice)
+            staro_parce = rijec[idx : idx + len(korijen)]
+            novo_parce = _sacuvaj_velika_slova(staro_parce, STEMS[korijen])
             
-    # KLJUČNO: Ako riječ ne prođe ni kroz jedan korijen, MORA vratiti originalnu riječ
+            # Koristimo .replace() koji JavaScript u brauzeru izvršava nepogrešivo
+            return rijec.replace(staro_parce, novo_parce)
+            
     return rijec
 
 
