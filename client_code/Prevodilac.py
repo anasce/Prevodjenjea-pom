@@ -723,7 +723,7 @@ STEM_FRAZE = {
     'Bel kraljic': 'Bijel kraljic',
     'Savet Evrop': 'Savjet Evrop',
     'Deda Mraz': 'Djed Mraz',
-    'Snešk Belić': 'Snješk Belić',
+    'Snešk Beli': 'Snješk Bijeli',
 
     'Mlečn put': 'Mlječni put',
     'Već Evrop': 'Vijeć Evrop',
