@@ -964,7 +964,7 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     ijekavski_words = korijen_ijekavski.split()
     
     novi_djelovi = []
-        tokeni_meca = re.split(r'([a-zA-ZčćžšđČĆŽŠĐ]+)', pronadjeno)
+    tokeni_meca = re.split(r'([a-zA-ZčćžšđČĆŽŠĐ]+)', pronadjeno)
     w_brojac = 0
     
     for tok in tokeni_meca:
