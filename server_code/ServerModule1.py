@@ -897,3 +897,10 @@ def probudi_server():
 def ijekavizuj_tekst(ulazni_tekst):
     try: return zamijeni_rijeci(ulazni_tekst) if ulazni_tekst else ""
     except Exception as e: print(f"Greška: {e}"); return ulazni_tekst
+import anvil.server
+
+@anvil.server.callable
+def stabilno_sjecenje_kvačica(rijec, idx, korijen_len, zamjena):
+    # Pravi Python na serveru ovdje savršeno računa poziciju slova š, č, ć, ž
+    sufiks = rijec[idx + korijen_len:]
+    return rijec[:idx] + zamjena + sufiks
