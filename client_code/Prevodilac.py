@@ -981,28 +981,34 @@ def a_rijec(rijec, is_start, okolni_tekst):
 
     for korijen in STEMS_SORTED:
         if korijen in r_low:
-            if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-            if len(korijen) < 4: continue
-            idx = r_low.find(korijen)
-            if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): continue
+            if korijen == r_low: 
+                return _sacuvaj_velika_slova(rijec, STEMS[korijen])
+            if len(korijen) < 4: 
+                continue
             
-            sufiks = r_low[idx + len(korijen):]
-            if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
-                baza = STEMS[korijen]
+            baza_zamjene = STEMS[korijen]
+            idx = r_low.find(korijen)
+            
+            # Provjera za specifične glagolske nastavke (npr. preneo -> prenio)
+            if korijen.endswith("e") and baza_zamjene.endswith("e") and r_low[idx + len(korijen):].startswith("o"):
+                baza_izvedena = baza_zamjene
                 for kraj in ["ije", "je"]:
-                    if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
-                zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
-                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
+                    if baza_izvedena.endswith(kraj): 
+                        baza_izvedena = baza_izvedena[:-len(kraj)]
+                        break
+                baza_izvedena = baza_izvedena + "io"
                 
-            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
-            return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
-            # AKO RIJEČ SADRŽI KVAČICE, SJEČENJE RADI SERVER, INAČE RADI KLIJENT BRZO
-            if any(c in rijec for c in ['š', 'č', 'ć', 'ž', 'đ', 'Š', 'Č', 'Ć', 'Ž', 'Đ']):
-               return anvil.server.call('stabilno_sjecenje_kvačica', rijec, idx, korijen_duzina, zamjena)
-            else:
-              # Standardno brzo klijentsko sječenje za riječi bez kvačica
-                return rijec[:idx] + zamjena + rijec[idx + korijen_duzina:]
+                # Bezbjedna zamjena preko Regexa sa čuvanjem velikih slova
+                pattern = re.compile(re.escape(korijen) + "o", re.IGNORECASE)
+                return pattern.sub(lambda m: _sacuvaj_velika_slova(m.group(0), baza_izvedena), rijec)
+            
+            # Standardna zamjena korijena preko Regexa - sigurno za dijakritike (kvačice)
+            pattern = re.compile(re.escape(korijen), re.IGNORECASE)
+            return pattern.sub(lambda m: _sacuvaj_velika_slova(m.group(0), STEMS[korijen]), rijec)
+            
+    # KLJUČNO: Ako riječ ne prođe ni kroz jedan korijen, MORA vratiti originalnu riječ
     return rijec
+
 
 def procesiraj_recenicu(recenica, predlozak_tekst):
     tokeni = re.split(r'([^\W\d_]+)', recenica, flags=re.U)
