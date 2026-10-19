@@ -717,15 +717,13 @@ STEMS = {
 
 STEM_FRAZE = {
     'Savet za ljudska prava UN': 'Savjet za ljudska prava UN',
-
     'Savet bezbednosti UN ': 'Savjet bezbjednosti UN',
-
     'Savet Evropske unije': 'Savjet Evropske unije',
-
 
     'Bel kraljic': 'Bijel kraljic',
     'Savet Evrop': 'Savjet Evrop',
-
+    'Deda Mraz': 'Djed Mraz',
+    'Snešk Belić': 'Snješk Belić',
 
     'Mlečn put': 'Mlječni put',
     'Već Evrop': 'Vijeć Evrop',
