@@ -974,20 +974,6 @@ def a_rijec(rijec, is_start, okolni_tekst):
         if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: return rijec
         return _sacuvaj_velika_slova(rijec, STEMS[r_low])
 
-    for korijen in STEMS_1_SORTED:
-        if korijen in r_low:
-            zamjenski_korijen = STEMS_1[korijen]
-            
-            if korijen == r_low: 
-                return _sacuvaj_velika_slova(rijec, zamjenski_korijen)
-            
-            # --- POPRAVKA ZA ANVIL SERVER: Koristimo re.sub sa re.U ---
-            # Re.escape osigurava da se kvačica pravilno protumači, a re.U aktivira Unicode mod
-            r_low_zamijenjen = re.sub(re.escape(korijen), zamjenski_korijen, r_low, flags=re.U)
-            
-            return _sacuvaj_velika_slova(rijec, r_low_zamijenjen)
-
-
     for m in KONTEKST_MAPE:
         if r_low in m['ekavski']:
             baza = m['mape_grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['mape_grupa2']
@@ -1010,6 +996,12 @@ def a_rijec(rijec, is_start, okolni_tekst):
                 
             zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
             return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
+            # AKO RIJEČ SADRŽI KVAČICE, SJEČENJE RADI SERVER, INAČE RADI KLIJENT BRZO
+            if any(c in rijec for c in ['š', 'č', 'ć', 'ž', 'đ', 'Š', 'Č', 'Ć', 'Ž', 'Đ']):
+               return anvil.server.call('stabilno_sjecenje_kvačica', rijec, idx, korijen_duzina, zamjena)
+            else:
+              # Standardno brzo klijentsko sječenje za riječi bez kvačica
+                return rijec[:idx] + zamjena + rijec[idx + korijen_duzina:]
     return rijec
 
 def procesiraj_recenicu(recenica, predlozak_tekst):
