@@ -271,7 +271,7 @@ STEMS = {
     'zaplenu': 'zapljenu',
 
     'bekstv': 'bjekstv',
-    'belešk': 'bilješk',
+    'beleš': 'bilješ',
     'bezbed': 'bezbjed',
     'cepnut': 'cjepnut',
     'dedukt': 'dedukt',
