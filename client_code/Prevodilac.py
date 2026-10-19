@@ -6,16 +6,14 @@ import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
 EXACT = {
-    'novi dugacki pojam': 'novi prevod 1',
 
+    'razmenama': 'razmjenama',
 
     'zahtevima': 'zahtjevima',
 
-    'beležimo': 'bilježimo',
-    'delićima': 'djelićima',
-    #'menjačima': 'mjenjačima',
     'pretrpeo': 'pretrpio',
     'razboleo': 'razbolio',
+    'razmenom': 'razmjenom',
     'svetlost': 'svjetlost',
     'zasedama': 'zasjedama',
 
@@ -24,25 +22,15 @@ EXACT = {
     'poželeo': 'poželio',
     'razmena': 'razmjena',
     'razmenu': 'razmjenu',
-    'razmenom': 'razmjenom',
-    'razmenama': 'razmjenama',
     'verzija': 'verzija',
     'zahteve': 'zahtjeve',
     'zahtevu': 'zahtjevu',
     'zahtevi': 'zahtjevi',
 
-    'beleži': 'bilježi',
-    'beleže': 'bilježe',
     'belima': 'bijelima',
     'celima': 'cijelima',
     'dedama': 'djedovima',
-    'delića': 'djelića',
-    'deliću': 'djeliću',
-    'delići': 'djelići',
     'drugde': 'drugdje',
-   # 'menjača': 'mjenjača',
-   # 'menjaču': 'mjenjačiu',
-   # 'menjači': 'mjenjači',
     'najpre': 'najprije',
     'napred': 'naprijed',
     'nemima': 'nijemima',
@@ -58,7 +46,6 @@ EXACT = {
     'zahtev': 'zahtjev',
 
     'celoj': 'cijeloj',
-    'delić': 'djelić',
     'doneo': 'donio',
     'iseći': 'isjeći',
     'nigde': 'nigdje',
@@ -69,12 +56,10 @@ EXACT = {
     'pevac': 'kokot',
     'rekao': 'rekao',
     'rekla': 'rekla',
-    'rečju': 'riječji',
- #   'menjač': 'mjenjač',
+    'rečju': 'riječju',
     'sreda': 'srijeda',
     'svest': 'svijest',
     'uspeo': 'uspio',
-#    'video': 'vidio',
     'voleo': 'volio',
     'vreme': 'vrijeme',
     'želeo': 'želio',
@@ -187,6 +172,7 @@ STEMS = {
     'preteran': 'pretjeran',
     'pretrpel': 'pretrpjel',
     'primenju': 'primjenju',
+    'privredn': 'privredn',
     'prosveti': 'prosvjeti',
     'ravnomer': 'ravnomjer',
     'sporazum': 'sporazum',
@@ -244,7 +230,6 @@ STEMS = {
     'primeno': 'primjeno',
     'primenj': 'primijenj',
     'primeti': 'primijeti',
-    'privredn': 'privredn',
     'procena': 'procjena',
     'procenj': 'procjenj',
     'procenu': 'procjenu',
@@ -262,7 +247,6 @@ STEMS = {
     'umetnik': 'umjetnik',
     'verenik': 'vjerenik',
     'vrednov': 'vrednov',
-   # 'zahteva': 'zahtijeva',
     'zamenic': 'zamjenic',
     'zamenik': 'zamjenik',
     'zaplena': 'zapljena',
@@ -270,8 +254,8 @@ STEMS = {
     'zapleni': 'zaplijeni',
     'zaplenu': 'zapljenu',
 
+    'belešk': 'bilješk',
     'bekstv': 'bjekstv',
-    'beleš': 'bilješ',
     'bezbed': 'bezbjed',
     'cepnut': 'cjepnut',
     'dedukt': 'dedukt',
@@ -292,8 +276,8 @@ STEMS = {
     'kolevk': 'kolijevk',
     'letarg': 'letarg',
     'letimi': 'letimi',
-    'mleven': 'mljeven',
     'menjač': 'mjenjač',
+    'mleven': 'mljeven',
     'najlep': 'najljep',
     'nalepi': 'nalijepi',
     'nalepn': 'naljepn',
@@ -331,7 +315,6 @@ STEMS = {
     'prevar': 'prevar',
     'preživ': 'preživj',
     'pridev': 'pridjev',
-#    'primen': 'primjen',
     'primer': 'primjer',
     'primet': 'primjet',
     'prispe': 'prispje',
@@ -373,7 +356,6 @@ STEMS = {
     'verova': 'vjerova',
     'volont': 'volont',
     'vremen': 'vremen',
-   # 'zahtev': 'zahtjev',
     'zabele': 'zabilje',
     'zameni': 'zamijeni',
     'zamenj': 'zamjenj',
@@ -384,6 +366,7 @@ STEMS = {
 
     'ameri': 'ameri',
     'beleg': 'biljeg',
+    'belež': 'biljež',
     'belil': 'bjelil',
     'belog': 'bjelog',
     'cedil': 'cjedil',
@@ -514,6 +497,9 @@ STEMS = {
     'smešt': 'smješt',
     'smeši': 'smiješi',
     'smeše': 'smiješe',
+    'snešk': 'snješk',
+    'sneži': 'sniježi',
+    'sneža': 'sniježa',
     'spreč': 'spriječ',
     'stale': 'stale',
     'sutra': 'śutra',
@@ -673,9 +659,7 @@ STEMS = {
     'čove': 'čovje',
     'venc': 'vijenc',
     'vers': 'vjers',
-   # 'vest': 'vijest',
     'vetr': 'vjetr',
-    #'veća': 'veća',
     'veći': 'veći',
     'veče': 'veče',
     'večn': 'vječn',
@@ -714,7 +698,6 @@ STEMS = {
     'čov': 'čovj',
 }
 
-
 STEM_FRAZE = {
     'Savet za ljudska prava UN': 'Savjet za ljudska prava UN',
     'Savet bezbednosti UN ': 'Savjet bezbjednosti UN',
@@ -725,7 +708,7 @@ STEM_FRAZE = {
     'Deda Mraz': 'Djed Mraz',
     'Snešk Beli': 'Snješk Bijeli',
 
-    'Mlečn put': 'Mlječni put',
+    'Mlečn put': 'Mlječn put',
     'Već Evrop': 'Vijeć Evrop',
 
     'Bel kuć': 'Bijel kuć',
@@ -739,7 +722,7 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse
 
 
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
-IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi"]
+IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
 IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
 
 
@@ -895,10 +878,22 @@ KONTEKST_MAPE = [
 
 ]
 
+def skini_dz(tekst):
+    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
+            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
+    return "".join(mape.get(c, c) for c in tekst)
+
+
 def _sacuvaj_velika_slova(izv, zam):
     if not izv or not zam: return zam
     if izv.isupper(): return zam.upper()
     return "".join(zam[i].upper() if izv[i if i < len(izv) else -1].isupper() else zam[i].lower() for i in range(len(zam)))
+
+
+def stabilno_sjecenje_kvačica(rijec, idx, korijen_len, zamjena):
+    # Pravi Python na serveru ovdje savršeno računa poziciju slova š, č, ć, ž
+    sufiks = rijec[idx + korijen_len:]
+    return rijec[:idx] + zamjena + sufiks
 
 def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
@@ -938,6 +933,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
             zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
             return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
     return rijec
+
 def procesiraj_recenicu(recenica, predlozak_tekst):
     # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
     pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
@@ -957,37 +953,70 @@ def procesiraj_recenicu(recenica, predlozak_tekst):
     return "".join(tokeni)
 
 
+
 def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     pronadjeno = match.group(0)
     ekavski_words = korijen_ekavski.split()
     ijekavski_words = korijen_ijekavski.split()
-    
     novi_djelovi = []
     tokeni_meca = re.split(r'([a-zA-ZčćžšđČĆŽŠĐ]+)', pronadjeno)
     w_brojac = 0
-    
+
     for tok in tokeni_meca:
         if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok) and w_brojac < len(ekavski_words):
-            izv_w = tok
-            ek_w = ekavski_words[w_brojac]
-            ij_w = ijekavski_words[w_brojac]
+            izv_w, ek_w, ij_w = tok, ekavski_words[w_brojac], ijekavski_words[w_brojac]
+            ek_cisto = skini_dz(ek_w)
+            nastavak = izv_w[len(ek_cisto):] if len(izv_w) >= len(ek_cisto) else ""
             
-            # Izvlačenje i čuvanje padežnog nastavka
-            nastavak = izv_w[len(ek_w):]
+            mape_karaktera = {'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]'}
+            dz_po_slovu = {'c': [], 's': [], 'z': [], 'd': []}
+            
+            for idx_e, c_ek in enumerate(ek_w):
+                c_low = skini_dz(c_ek).lower()
+                if c_low in mape_karaktera:
+                    ima = idx_e < len(izv_w) and izv_w[idx_e] != skini_dz(izv_w[idx_e])
+                    dz_po_slovu[c_low].append(ima)
+            
+            privremeni = list(skini_dz(ij_w))
+            konverzija = {'c': 'č', 's': 'š', 'z': 'ž', 'd': 'đ'}
+            brojaci = {'c': 0, 's': 0, 'z': 0, 'd': 0}
+            
+            for idx_i, c_ij in enumerate(privremeni):
+                c_low = c_ij.lower()
+                if c_low in dz_po_slovu:
+                    b_idx = brojaci[c_low]
+                    if b_idx < len(dz_po_slovu[c_low]) and dz_po_slovu[c_low][b_idx]:
+                        privremeni[idx_i] = konverzija[c_low].upper() if c_ij.isupper() else konverzija[c_low]
+                    brojaci[c_low] += 1
+                    
+            ij_w = "".join(privremeni)
             
             if izv_w.isupper():
-                zamijenjena_riječ = ij_w.upper() + nastavak.upper()
+                zamjena = ij_w.upper() + nastavak.upper()
+            elif izv_w.islower():
+                zamjena = ij_w.lower() + nastavak.lower()
             elif izv_w.istitle():
-                zamijenjena_riječ = ij_w.capitalize() + nastavak
+                zamjena = ij_w.capitalize() + nastavak
             else:
-                zamijenjena_riječ = ij_w + nastavak
+                zamjena = "".join(ij_w[i].upper() if i < len(izv_w) and izv_w[i].isupper() else ij_w[i].lower() for i in range(len(ij_w))) + nastavak
                 
-            novi_djelovi.append(zamijenjena_riječ)
+            novi_djelovi.append(zamjena)
             w_brojac += 1
         else:
             novi_djelovi.append(tok)
             
     return "".join(novi_djelovi)
+        # Mapiranje karaktera za fleksibilan regex koji ignoriše kvačice
+def napravi_fleksibilan_regex(riječ):
+            rezultat = ""
+            mape_slova = {
+                'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
+                'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
+            }
+            for c in riječ:
+                c_cisto = skini_dz(c)
+                rezultat += mape_slova.get(c_cisto, re.escape(c))
+            return rezultat
 
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
@@ -1004,11 +1033,15 @@ def zamijeni_rijeci(tekst):
         je_cirilica = prvo_slovo in cirilica_skup
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
-        # Umjesto starog FRAZE_PATTERNS bloka, koristi ovaj fleksibilni za STEM_FRAZE:
+
+
+        # Prolazak kroz STEM_FRAZE sa ignorisanjem kvačica
         for fraza, zamjena in STEM_FRAZE.items():
             djelovi_fraze = fraza.split()
-            # Ovaj regex dopušta da svaka riječ u frazi ima proizvoljan nastavak (npr. -o, -ić, -oj, -i)
-            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(re.escape(w) for w in djelovi_fraze) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+            
+            # Pravimo regex za svaku riječ u frazi koji ignoriše kvačice i dopušta padežne nastavke
+            regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
             pattern = re.compile(pattern_str, re.IGNORECASE)
             
             trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
@@ -1045,7 +1078,6 @@ def a_datoteku(ulaz, izlaz):
 
 if __name__ == "__main__":
     if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
-
 def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
     # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
