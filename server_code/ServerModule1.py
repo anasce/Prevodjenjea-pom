@@ -900,7 +900,7 @@ def ijekavizuj_tekst(ulazni_tekst):
 import anvil.server
 
 @anvil.server.callable
-def stabilno_sjecenje_kvačica(rijec, idx, korijen_len, zamjena):
+def stabilno_sjecenje_dz(rijec, idx, korijen_len, zamjena):
     # Pravi Python na serveru ovdje savršeno računa poziciju slova š, č, ć, ž
     sufiks = rijec[idx + korijen_len:]
     return rijec[:idx] + zamjena + sufiks
