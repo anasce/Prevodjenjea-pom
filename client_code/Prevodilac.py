@@ -989,7 +989,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
             baza_zamjene = STEMS[korijen]
             idx = r_low.find(korijen)
             
-            # 1. Specijalni slučaj za glagolske nastavke (npr. preneo -> prenio)
+            # 1. Glagolski nastavci (npr. preneo -> prenio)
             if korijen.endswith("e") and baza_zamjene.endswith("e") and r_low[idx + len(korijen):].startswith("o"):
                 baza_izvedena = baza_zamjene
                 for kraj in ["ije", "je"]:
@@ -998,17 +998,16 @@ def a_rijec(rijec, is_start, okolni_tekst):
                         break
                 baza_izvedena = baza_izvedena + "io"
                 
-                # Čista klijentska zamjena bez sječenja indeksa i bez lambda funkcija
-                staro_parce = rijec[idx : idx + len(korijen) + 1]
-                novo_parce = _sacuvaj_velika_slova(staro_parce, baza_izvedena)
-                return rijec.replace(staro_parce, novo_parce)
+                korijen_len = len(korijen) + 1
+                zamjena = _sacuvaj_velika_slova(rijec[idx : idx + korijen_len], baza_izvedena)
+                return rijec[:idx] + zamjena + rijec[idx + korijen_len:]
             
-            # 2. Standardna zamjena korijena (sigurna za dijakritike / kvačice)
-            staro_parce = rijec[idx : idx + len(korijen)]
-            novo_parce = _sacuvaj_velika_slova(staro_parce, STEMS[korijen])
+            # 2. Standardna zamjena (Za "doživeti", "beleška" i sve ostale riječi sa kvačicama)
+            korijen_len = len(korijen)
+            zamjena = _sacuvaj_velika_slova(rijec[idx : idx + korijen_len], STEMS[korijen])
             
-            # Koristimo .replace() koji JavaScript u brauzeru izvršava nepogrešivo
-            return rijec.replace(staro_parce, novo_parce)
+            # Čisto spajanje stringova preko indeksa koji su unapred fiksirani
+            return rijec[:idx] + zamjena + rijec[idx + korijen_len:]
             
     return rijec
 
