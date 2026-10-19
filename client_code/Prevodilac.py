@@ -897,9 +897,9 @@ KONTEKST_MAPE = [
 ]
 
 def _sacuvaj_velika_slova(izv, zam):
+    if not izv or not zam: return zam
     if izv.isupper(): return zam.upper()
-    if izv.istitle(): return zam.capitalize()
-    return zam
+    return "".join(zam[i].upper() if izv[i if i < len(izv) else -1].isupper() else zam[i].lower() for i in range(len(zam)))
 
 def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
