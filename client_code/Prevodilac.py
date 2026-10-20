@@ -5,6 +5,8 @@ import re
 import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -714,6 +716,48 @@ STEM_FRAZE = {
     'Bel kuć': 'Bijel kuć',
 }
 
+# =====================================================================
+# POVRATAK IZBRISANIH OBJEKATA ZA OPTIMIZACIJU (Staviti iznad svih funkcija)
+# =====================================================================
+STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
+IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
+IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
+
+# 1. Ponovo pravimo brzi O(1) indeks za kontekstne mape
+
+
+# 2. Masovni regex za korijene reči
+STEMS_REGEX = re.compile(r'\b(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')([a-zA-ZčćžšđČĆŽŠĐ]*)\b', re.IGNORECASE)
+
+
+def skini_dz(tekst):
+    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
+            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
+    return "".join(mape.get(c, c) for c in tekst)
+
+
+# 3. Pomoćna funkcija za fleksibilan regex fraza (ignoriše kvačice)
+def napravi_fleksibilan_regex(riječ):
+    rezultat = ""
+    mape_slova = {
+        'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
+        'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
+    }
+    for c in riječ:
+        c_cisto = skini_dz(c)
+        rezultat += mape_slova.get(c_cisto, re.escape(c))
+    return rezultat
+
+# 4. Ponovo generišemo KOMPAJLIRANE_FRAZE koje su nedostajale
+KOMPAJLIRANE_FRAZE = []
+for fraza, zamjena in STEM_FRAZE.items():
+    djelovi_fraze = fraza.split()
+    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+    KOMPAJLIRANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
+# =====================================================================
+
+
 FRAZE_PATTERNS = []
 sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
 for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
@@ -878,10 +922,17 @@ KONTEKST_MAPE = [
 
 ]
 
-def skini_dz(tekst):
-    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
-            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
-    return "".join(mape.get(c, c) for c in tekst)
+BRZA_KONTEKST_MAPA = {}
+for m in KONTEKST_MAPE:
+    for ekavska_rijec in m['ekavski']:
+        if ekavska_rijec not in BRZA_KONTEKST_MAPA:
+            BRZA_KONTEKST_MAPA[ekavska_rijec] = []
+        BRZA_KONTEKST_MAPA[ekavska_rijec].append({
+            'kljucevi1': m['kljucevi1'],
+            'mape_grupa1': m['mape_grupa1'],
+            'mape_grupa2': m['mape_grupa2']
+        })
+
 
 
 def _sacuvaj_velika_slova(izv, zam):
@@ -899,7 +950,6 @@ def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
     if "e" not in r_low: return rijec
 
-    # Popravljeno: Više ne gledamo is_start, veliko slovo + koren sa liste = uvek ostaje ime
     if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
         return rijec
 
@@ -910,41 +960,44 @@ def a_rijec(rijec, is_start, okolni_tekst):
         if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: return rijec
         return _sacuvaj_velika_slova(rijec, STEMS[r_low])
 
-    for m in KONTEKST_MAPE:
-        if r_low in m['ekavski']:
-            baza = m['mape_grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['mape_grupa2']
-            return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
+    # NOVO: Direktna provera konteksta u rečniku u O(1) vremenu (Nema više petlje kroz KONTEKST_MAPE)
+    if r_low in BRZA_KONTEKST_MAPA:
+        for varijanta in BRZA_KONTEKST_MAPA[r_low]:
+            baza = varijanta['mape_grupa1'] if any(k in okolni_tekst for k in varijanta['kljucevi1']) else varijanta['mape_grupa2']
+            if r_low in baza:
+                return _sacuvaj_velika_slova(rijec, baza[r_low])
 
-    for korijen in STEMS_SORTED:
-        if korijen in r_low:
-            if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-            if len(korijen) < 4: continue
+    # NOVO: Brza provera korena reči u jednom jedinom koraku preko regexa (Nema for petlje kroz STEMS_SORTED)
+    match_korijen = STEMS_REGEX.match(r_low)
+    if match_korijen:
+        korijen = match_korijen.group(1)
+        if len(korijen) >= 4 or korijen == r_low:
             idx = r_low.find(korijen)
-            if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): continue
-            
-            sufiks = r_low[idx + len(korijen):]
-            if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
-                baza = STEMS[korijen]
-                for kraj in ["ije", "je"]:
-                    if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
-                zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
-                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
+            if not (((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or 
+                    (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO)):
                 
-            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
-            return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
+                sufiks = r_low[idx + len(korijen):]
+                if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
+                    baza = STEMS[korijen]
+                    for kraj in ["ije", "je"]:
+                        if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
+                    zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
+                    return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
+                    
+                zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
+                return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
     return rijec
 
+
 def procesiraj_recenicu(recenica, predlozak_tekst):
-    # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
     pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
-    
     tokeni = re.split(pattern, recenica)
     sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', t)]
     
     is_start, idx = True, 0
     for i, tok in enumerate(tokeni):
         if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok):
-            kontekst = " ". join(sve_rijeci[max(0, idx - 4): min(len(sve_rijeci), idx + 5)])
+            kontekst = " ".join(sve_rijeci[max(0, idx - 4): min(len(sve_rijeci), idx + 5)])
             tokeni[i] = a_rijec(tok, is_start, kontekst)
             is_start, idx = False, idx + 1
         elif tok.strip() and any(c in tok for c in ['.', '!', '?', '\n']):
@@ -1020,41 +1073,27 @@ def napravi_fleksibilan_regex(riječ):
 
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
-    procesuirane_linije = []
     
-    # Sigurna detekcija ćirilice preko Unicode opsega (radi stabilno na Anvil serveru)
     def sadrzi_cirilicu(struna):
         return any('\u0400' <= c <= '\u04FF' for c in struna)
 
-    for linija in tekst.splitlines(keepends=True):
-        tekst_strip = linija.strip()
-        if not tekst_strip:
-            procesuirane_linije.append(linija)
-            continue
-            
-        # Provjera da li linija sadrži ćirilična slova
-        je_cirilica = sadrzi_cirilicu(linija)
-        trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
-        
-        # Prolazak kroz STEM_FRAZE sa ignorisanjem kvačica
-        for fraza, zamjena in STEM_FRAZE.items():
-            djelovi_fraze = fraza.split()
-            regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
-            pattern = re.compile(pattern_str, re.IGNORECASE)
-            trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
+    je_cirilica = sadrzi_cirilicu(tekst)
+    trenutni_tekst = cirilica_u_latinicu(tekst) if je_cirilica else tekst
+    
+    
+    for pattern, fraza, zamjena in KOMPAJLIRANE_FRAZE:
+        trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
 
-        novi_djelovi = []
-        for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
-            if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
-                novi_djelovi.append(dio)
-            else:
-                novi_djelovi.append(procesiraj_recenicu(dio, trenutni_tekst))
+    novi_djelovi = []
+    
+    for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
+        if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
+            novi_djelovi.append(dio)
+        else:
+            novi_djelovi.append(procesiraj_recenicu(dio, trenutni_tekst))
                 
-        tekst_ijekavski = "".join(novi_djelovi)
-        procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski)
-            
-    return "".join(procesuirane_linije)
+    tekst_ijekavski = "".join(novi_djelovi)
+    return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
 
 
 
