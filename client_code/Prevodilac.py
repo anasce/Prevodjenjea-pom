@@ -6,6 +6,8 @@ import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
 
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -752,14 +754,40 @@ def napravi_fleksibilan_regex(riječ):
         rezultat += mape_slova.get(c_cisto, re.escape(c))
     return rezultat
 
-# 4. Ponovo generišemo KOMPAJLIRANE_FRAZE koje su nedostajale
-KOMPAJLIRANE_FRAZE = []
+# --- OPTIMIZACIJA: Spajanje svih fraza u JEDAN regex prolaz ---
+MAPA_FRAZA_ZA_ZAMJENU = {}
+djelovi_masovnog_regexa = []
+
 for fraza, zamjena in STEM_FRAZE.items():
     djelovi_fraze = fraza.split()
     regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
-    KOMPAJLIRANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
-# =====================================================================
+    # Kreiramo grupisan šablon za svaku frazu pojedinačno
+    sablon_fraze = r"\b" + r"(?:[a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"(?:[a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+    
+    # Čuvamo šablon i povezujemo ga sa originalnim parom radi kasnijeg mečovanja
+    djelovi_masovnog_regexa.append(f"({sablon_fraze})")
+    MAPA_FRAZA_ZA_ZAMJENU[fraza.lower()] = (fraza, zamjena)
+
+# Jedinstveni, masovni regex šablon za sve fraze odjednom
+MASOVNI_FRAZA_REGEX = re.compile("|".join(djelovi_masovnog_regexa), re.IGNORECASE)
+
+def _brza_zamjena_fraza_callback(match):
+    pronadjeno = match.group(0)
+    pronadjeno_low = pronadjeno.lower()
+    
+    # Pronalazimo koja tačno fraza se poklopila iz našeg indeksa
+    za_kljuc = None
+    for originalni_ekavski in MAPA_FRAZA_ZA_ZAMJENU:
+        # Čistimo kvačice radi sigurnog poređenja na klijentu
+        if skini_dz(originalni_ekavski) in skini_dz(pronadjeno_low):
+            za_kljuc = originalni_ekavski
+            break
+            
+    if za_kljuc:
+        ekavski, ijekavski = MAPA_FRAZA_ZA_ZAMJENU[za_kljuc]
+        return _zamijeni_frazu_match(match, ekavski, ijekavski)
+    return pronadjeno
+
 
 
 FRAZE_PATTERNS = []
@@ -1086,22 +1114,19 @@ def zamijeni_rijeci(tekst):
     je_cirilica = sadrzi_cirilicu(tekst)
     trenutni_tekst = cirilica_u_latinicu(tekst) if je_cirilica else tekst
     
-    # 1. Zamjena fraza odjednom nad cijelim tekstom (Ovo radi brzo u C-u)
-    for pattern, fraza, zamjena in KOMPAJLIRANE_FRAZE:
-        trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
+    # NOVO: Umesto stotina petlji, radimo JEDAN jedini prolaz kroz ceo tekst za sve fraze!
+    trenutni_tekst = MASOVNI_FRAZA_REGEX.sub(_brza_zamjena_fraza_callback, trenutni_tekst)
 
     novi_djelovi = []
-    
-    # 2. Dijeljenje na rečenice/pasuse
     for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
         if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
             novi_djelovi.append(dio)
         else:
-            # OPTIMIZACIJA: Prosljeđujemo 'dio' (rečenicu) kao predložak teksta umesto cijelog fajla!
             novi_djelovi.append(procesiraj_recenicu(dio, dio))
                 
     tekst_ijekavski = "".join(novi_djelovi)
     return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
+
 
 
 
