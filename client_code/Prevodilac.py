@@ -1098,7 +1098,9 @@ def a_datoteku(ulaz, izlaz):
     print(f"Završeno: '{ulaz}' -> '{izlaz}'")
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])def probudi_server():
+    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
+
+def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
     # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
     pass
