@@ -7,7 +7,6 @@ import anvil.server
 
 
 
-
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -259,6 +258,7 @@ STEMS = {
 
     'belešk': 'bilješk',
     'bekstv': 'bjekstv',
+    'beleži': 'bilježi',
     'bezbed': 'bezbjed',
     'cepnut': 'cjepnut',
     'dedukt': 'dedukt',
@@ -315,7 +315,8 @@ STEMS = {
     'predst': 'predst',
     'preduz': 'preduz',
     'prenes': 'prenes',
-    'prevar': 'prevar',
+    'prenes': 'prenes',
+    'presel': 'presel',
     'preživ': 'preživj',
     'pridev': 'pridjev',
     'primer': 'primjer',
@@ -1024,20 +1025,43 @@ def a_rijec(rijec, is_start, okolni_tekst):
 
 
 def procesiraj_recenicu(recenica, predlozak_tekst):
-    pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
+    pattern = r'([a-zA-ZčćžšđČĆŽŠĐа-яА-ЯђјљњћџЂЈЉЊЋЏС́с́]+)' # Dodata ćirilica u regex tokena
     tokeni = re.split(pattern, recenica)
-    sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', t)]
+    
+    # Pomoćna funkcija za brzu provjeru ćirilice na nivou riječi
+    def je_rijec_cirilica(w):
+        return any('\u0400' <= c <= '\u04FF' for c in w)
+        
+    sve_rijeci_za_kontekst = []
+    for t in tokeni:
+        if t and not t.isspace() and any(c.isalnum() for c in t):
+            # Za kontekst nam treba latinica
+            sve_rijeci_za_kontekst.append(cirilica_u_latinicu(t).lower())
     
     is_start, idx = True, 0
     for i, tok in enumerate(tokeni):
-        if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok):
-            kontekst = " ".join(sve_rijeci[max(0, idx - 4): min(len(sve_rijeci), idx + 5)])
-            tokeni[i] = a_rijec(tok, is_start, kontekst)
+        # Provjeravamo da li je token riječ (bilo latinična ili ćirilična)
+        if tok and not tok.isspace() and any(c.isalnum() for c in tok):
+            izvorno_cirilica = je_rijec_cirilica(tok)
+            
+            # Prebacujemo u latinicu radi obrade kroz rečnike i regex-e
+            tok_lat = cirilica_u_latinicu(tok)
+            
+            kontekst = " ".join(sve_rijeci_za_kontekst[max(0, idx - 4): min(len(sve_rijeci_za_kontekst), idx + 5)])
+            obradjena_rijec = a_rijec(tok_lat, is_start, kontekst)
+            
+            # Vraćamo u ćirilicu SAMO ako je riječ izvorno bila ćirilična
+            if izvorno_cirilica:
+                tokeni[i] = latinica_u_cirilicu(obradjena_rijec)
+            else:
+                tokeni[i] = obradjena_rijec
+                
             is_start, idx = False, idx + 1
         elif tok.strip() and any(c in tok for c in ['.', '!', '?', '\n']):
             is_start = True
             
     return "".join(tokeni)
+
 
 
 
@@ -1108,24 +1132,33 @@ def napravi_fleksibilan_regex(riječ):
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
-    def sadrzi_cirilicu(struna):
-        return any('\u0400' <= c <= '\u04FF' for c in struna)
-
-    je_cirilica = sadrzi_cirilicu(tekst)
-    trenutni_tekst = cirilica_u_latinicu(tekst) if je_cirilica else tekst
-    
-    # NOVO: Umesto stotina petlji, radimo JEDAN jedini prolaz kroz ceo tekst za sve fraze!
+    # 1. Za fraze moramo raditi u latinici, ali čuvamo izvorno pismo reči
+    trenutni_tekst = cirilica_u_latinicu(tekst)
     trenutni_tekst = MASOVNI_FRAZA_REGEX.sub(_brza_zamjena_fraza_callback, trenutni_tekst)
+    
+    # Vraćamo mapirane fraze u originalni tekst tamo gdje je bila ćirilica
+    # (Ovo omogućava da rečenice zadrže svoj miks pisama pre ulaska u procesiranje)
+    tekst_miks = ""
+    for i, char in enumerate(tekst):
+        if '\u0400' <= char <= '\u04FF': # Ako je na toj poziciji bila ćirilica
+            tekst_miks += latinica_u_cirilicu(trenutni_tekst[i]) if i < len(trenutni_tekst) else ""
+        else:
+            tekst_miks += trenutni_tekst[i] if i < len(trenutni_tekst) else ""
+            
+    if len(trenutni_tekst) > len(tekst):
+        # Ako je ijekavizacija fraza produžila string, dodajemo ostatak
+        tekst_miks += trenutni_tekst[len(tekst):]
 
     novi_djelovi = []
-    for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
+    # 2. Dijeljenje na rečenice/pasuse nad tekstom koji je zadržao miks pisama
+    for dio in re.split(r'([.!?\n]+)', tekst_miks):
         if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
             novi_djelovi.append(dio)
         else:
             novi_djelovi.append(procesiraj_recenicu(dio, dio))
                 
-    tekst_ijekavski = "".join(novi_djelovi)
-    return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
+    return "".join(novi_djelovi)
+
 
 
 
