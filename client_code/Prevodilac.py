@@ -312,7 +312,6 @@ STEMS = {
     'predst': 'predst',
     'preduz': 'preduz',
     'prenes': 'prenes',
-    'presel': 'presel',
     'prevar': 'prevar',
     'preživ': 'preživj',
     'pridev': 'pridjev',
@@ -715,65 +714,6 @@ STEM_FRAZE = {
     'Bel kuć': 'Bijel kuć',
 }
 
-def skini_dz(tekst):
-    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
-            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
-    return "".join(mape.get(c, c) for c in tekst)
-
-def napravi_fleksibilan_regex(riječ):
-    rezultat = ""
-    mape_slova = {
-        'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
-        'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
-    }
-    for c in riječ:
-        c_cisto = skini_dz(c)
-        rezultat += mape_slova.get(c_cisto, re.escape(c))
-    return rezultat
-
-# Правимо јединствен рjечник за брзо претраживање у О(1) комплексности
-MAPA_FRAZA_ZA_ZAMJENU = {}
-regex_grupe = []
-for fraza, zamjena in STEM_FRAZE.items():
-    djelovi_fraze = fraza.split()
-    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-    # Спајамо делове речи тако да regex покрива размаке и прати контекст
-    pattern_str = r"\b" + r"(?:[a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"(?:[a-zA-ZčćžšđČĆŽŠĐ]*)\b"
-    regex_grupe.append(pattern_str)
-    # Чувамо чисту верзију кључа без квачица ради лакшег препознавања у callback-u
-    MAPA_FRAZA_ZA_ZAMJENU[skini_dz(fraza).lower()] = (fraza, zamjena)
-
-# Спајамо све фразе помоћу оператора | у један мега-патерн
-# Сортирамо по дужини да би дуже фразе имале приоритет при проналажењу
-regex_grupe_sortirane = sorted(regex_grupe, key=len, reverse=True)
-SUPER_FRAZA_REGEX = re.compile("|".join(regex_grupe_sortirane), re.IGNORECASE)
-
-def _optimalan_fraza_callback(match):
-    pronadjeno = match.group(0)
-    pronadjeno_cisto = skini_dz(pronadjeno).lower()
-    
-    # Скенирамо која фраза из речника одговара пронађеном тексту у О(1) времену
-    for kljuc_cisti, (izvorna_fraza, ijekavska_fraza) in MAPA_FRAZA_ZA_ZAMJENU.items():
-        # Брза провјера почетка ријечи како бисмо избјегли спор пролазак кроз петље
-        if kljuc_cisti.startswith(pronadjeno_cisto[:3]): 
-            return _zamijeni_frazu_match(match, templates_ekavski=izvorna_fraza, templates_ijekavski=ijekavska_fraza)
-    return pronadjeno
-
-
-
-
-def napravi_fleksibilan_regex(riječ):
-    rezultat = ""
-    mape_slova = {
-        'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
-        'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
-    }
-    for c in riječ:
-        c_cisto = skini_dz(c)
-        rezultat += mape_slova.get(c_cisto, re.escape(c))
-    return rezultat
-
-
 FRAZE_PATTERNS = []
 sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
 for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
@@ -784,10 +724,6 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
 IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
 IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
-
-
-
-
 
 
 KONTEKST_MAPE = [
@@ -942,6 +878,10 @@ KONTEKST_MAPE = [
 
 ]
 
+def skini_dz(tekst):
+    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
+            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
+    return "".join(mape.get(c, c) for c in tekst)
 
 
 def _sacuvaj_velika_slova(izv, zam):
@@ -1014,12 +954,10 @@ def procesiraj_recenicu(recenica, predlozak_tekst):
 
 
 
-
-# Мала исправка за функцију фраза да прихвати прослијеђене шаблоне
-def _zamijeni_frazu_match(match, templates_ekavski, templates_ijekavski):
+def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     pronadjeno = match.group(0)
-    ekavski_words = templates_ekavski.split()
-    ijekavski_words = templates_ijekavski.split()
+    ekavski_words = korijen_ekavski.split()
+    ijekavski_words = korijen_ijekavski.split()
     novi_djelovi = []
     tokeni_meca = re.split(r'([a-zA-ZčćžšđČĆŽŠĐ]+)', pronadjeno)
     w_brojac = 0
@@ -1053,9 +991,12 @@ def _zamijeni_frazu_match(match, templates_ekavski, templates_ijekavski):
                     
             ij_w = "".join(privremeni)
             
-            if izv_w.isupper(): zamjena = ij_w.upper() + nastavak.upper()
-            elif izv_w.islower(): zamjena = ij_w.lower() + nastavak.lower()
-            elif izv_w.istitle(): zamjena = ij_w.capitalize() + nastavak
+            if izv_w.isupper():
+                zamjena = ij_w.upper() + nastavak.upper()
+            elif izv_w.islower():
+                zamjena = ij_w.lower() + nastavak.lower()
+            elif izv_w.istitle():
+                zamjena = ij_w.capitalize() + nastavak
             else:
                 zamjena = "".join(ij_w[i].upper() if i < len(izv_w) and izv_w[i].isupper() else ij_w[i].lower() for i in range(len(ij_w))) + nastavak
                 
@@ -1081,6 +1022,7 @@ def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     procesuirane_linije = []
     
+    # Sigurna detekcija ćirilice preko Unicode opsega (radi stabilno na Anvil serveru)
     def sadrzi_cirilicu(struna):
         return any('\u0400' <= c <= '\u04FF' for c in struna)
 
@@ -1090,11 +1032,17 @@ def zamijeni_rijeci(tekst):
             procesuirane_linije.append(linija)
             continue
             
+        # Provjera da li linija sadrži ćirilična slova
         je_cirilica = sadrzi_cirilicu(linija)
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
-        # ОВДЈЕ СЕ ДЕШАВА МАГИЈА: Замјена свих фраза ОДЈЕДНОМ у једном једином кораку!
-        trenutni_tekst = SUPER_FRAZA_REGEX.sub(_optimalan_fraza_callback, trenutni_tekst)
+        # Prolazak kroz STEM_FRAZE sa ignorisanjem kvačica
+        for fraza, zamjena in STEM_FRAZE.items():
+            djelovi_fraze = fraza.split()
+            regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+            pattern = re.compile(pattern_str, re.IGNORECASE)
+            trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
 
         novi_djelovi = []
         for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
@@ -1107,7 +1055,6 @@ def zamijeni_rijeci(tekst):
         procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski)
             
     return "".join(procesuirane_linije)
-
 
 
 
@@ -1128,7 +1075,6 @@ def a_datoteku(ulaz, izlaz):
 
 if __name__ == "__main__":
     if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
-        
 def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
     # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
