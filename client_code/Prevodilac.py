@@ -312,6 +312,7 @@ STEMS = {
     'predst': 'predst',
     'preduz': 'preduz',
     'prenes': 'prenes',
+    'presel': 'presel',
     'prevar': 'prevar',
     'preživ': 'preživj',
     'pridev': 'pridjev',
@@ -714,6 +715,23 @@ STEM_FRAZE = {
     'Bel kuć': 'Bijel kuć',
 }
 
+def skini_dz(tekst):
+    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
+            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
+    return "".join(mape.get(c, c) for c in tekst)
+
+def napravi_fleksibilan_regex(riječ):
+    rezultat = ""
+    mape_slova = {
+        'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
+        'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
+    }
+    for c in riječ:
+        c_cisto = skini_dz(c)
+        rezultat += mape_slova.get(c_cisto, re.escape(c))
+    return rezultat
+
+
 FRAZE_PATTERNS = []
 sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
 for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
@@ -724,6 +742,15 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
 IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
 IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
+
+
+
+PRED_KOMPILOVANE_FRAZE = []
+for fraza, zamjena in STEM_FRAZE.items():
+    djelovi_fraze = fraza.split()
+    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+    PRED_KOMPILOVANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
 
 
 KONTEKST_MAPE = [
@@ -878,10 +905,6 @@ KONTEKST_MAPE = [
 
 ]
 
-def skini_dz(tekst):
-    mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
-            'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
-    return "".join(mape.get(c, c) for c in tekst)
 
 
 def _sacuvaj_velika_slova(izv, zam):
@@ -1058,6 +1081,7 @@ def zamijeni_rijeci(tekst):
 
 
 
+
 def cirilica_u_latinicu(tekst):
     m = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
     return "".join(m.get(c, c) for c in tekst)
@@ -1074,8 +1098,7 @@ def a_datoteku(ulaz, izlaz):
     print(f"Završeno: '{ulaz}' -> '{izlaz}'")
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])
-def probudi_server():
+    if len(sys.argv) == 3: a_datoteku(sys.argv[1], sys.argv[2])def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
     # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
     pass
