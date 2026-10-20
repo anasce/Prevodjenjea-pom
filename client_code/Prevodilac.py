@@ -7,8 +7,6 @@ import anvil.server
 
 
 
-
-
 EXACT = {
 
     'razmenama': 'razmjenama',
