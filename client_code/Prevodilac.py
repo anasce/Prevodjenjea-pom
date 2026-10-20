@@ -5,6 +5,10 @@ import re
 import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
+
+
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -312,6 +316,7 @@ STEMS = {
     'predst': 'predst',
     'preduz': 'preduz',
     'prenes': 'prenes',
+    'presel': 'presel',
     'prevar': 'prevar',
     'preživ': 'preživj',
     'pridev': 'pridjev',
@@ -971,6 +976,12 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
             mape_karaktera = {'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]'}
             dz_po_slovu = {'c': [], 's': [], 'z': [], 'd': []}
             
+            # Ključna izmjena: Gledamo koje tačno slovo (č ili ć) stoji u ijekavskoj riječi iz baze
+            slova_za_c_iz_baze = []
+            for c_ij in ij_w:
+                if c_ij.lower() in ['č', 'ć']:
+                    slova_za_c_iz_baze.append(c_ij.lower())
+
             for idx_e, c_ek in enumerate(ek_w):
                 c_low = skini_dz(c_ek).lower()
                 if c_low in mape_karaktera:
@@ -978,7 +989,6 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
                     dz_po_slovu[c_low].append(ima)
             
             privremeni = list(skini_dz(ij_w))
-            konverzija = {'c': 'č', 's': 'š', 'z': 'ž', 'd': 'đ'}
             brojaci = {'c': 0, 's': 0, 'z': 0, 'd': 0}
             
             for idx_i, c_ij in enumerate(privremeni):
@@ -986,7 +996,14 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
                 if c_low in dz_po_slovu:
                     b_idx = brojaci[c_low]
                     if b_idx < len(dz_po_slovu[c_low]) and dz_po_slovu[c_low][b_idx]:
-                        privremeni[idx_i] = konverzija[c_low].upper() if c_ij.isupper() else konverzija[c_low]
+                        if c_low == 'c':
+                            # Izvlačimo tačno ono slovo (č ili ć) koje je definisano u STEM_FRAZE za tu poziciju
+                            tacno_slovo = slova_za_c_iz_baze[b_idx] if b_idx < len(slova_za_c_iz_baze) else 'č'
+                            privremeni[idx_i] = tacno_slovo.upper() if c_ij.isupper() else tacno_slovo
+                        else:
+                            konverzija_ostali = {'s': 'š', 'z': 'ž', 'd': 'đ'}
+                            odabrano = konverzija_ostali[c_low]
+                            privremeni[idx_i] = odabrano.upper() if c_ij.isupper() else odabrano
                     brojaci[c_low] += 1
                     
             ij_w = "".join(privremeni)
@@ -1017,12 +1034,20 @@ def napravi_fleksibilan_regex(riječ):
                 c_cisto = skini_dz(c)
                 rezultat += mape_slova.get(c_cisto, re.escape(c))
             return rezultat
+# PRE-KOMPAJLIRANJE REGEX-A (Izvršava se samo jednom pri pokretanju aplikacije)
+PRECOMPILED_FRAZE = []
+for fraza, zamjena in STEM_FRAZE.items():
+    djelovi_fraze = fraza.split()
+    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+    pattern = re.compile(pattern_str, re.IGNORECASE)
+    PRECOMPILED_FRAZE.append((pattern, fraza, zamjena))
+
 
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     procesuirane_linije = []
     
-    # Sigurna detekcija ćirilice preko Unicode opsega (radi stabilno na Anvil serveru)
     def sadrzi_cirilicu(struna):
         return any('\u0400' <= c <= '\u04FF' for c in struna)
 
@@ -1032,16 +1057,11 @@ def zamijeni_rijeci(tekst):
             procesuirane_linije.append(linija)
             continue
             
-        # Provjera da li linija sadrži ćirilična slova
         je_cirilica = sadrzi_cirilicu(linija)
         trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
         
-        # Prolazak kroz STEM_FRAZE sa ignorisanjem kvačica
-        for fraza, zamjena in STEM_FRAZE.items():
-            djelovi_fraze = fraza.split()
-            regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
-            pattern = re.compile(pattern_str, re.IGNORECASE)
+        # Korišćenje pre-kompajliranih regex-a umjesto pravljenja novih u svakoj liniji
+        for pattern, fraza, zamjena in PRECOMPILED_FRAZE:
             trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
 
         novi_djelovi = []
@@ -1055,6 +1075,7 @@ def zamijeni_rijeci(tekst):
         procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski)
             
     return "".join(procesuirane_linije)
+
 
 
 
