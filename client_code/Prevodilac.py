@@ -6,7 +6,6 @@ import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
 
-
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -728,6 +727,11 @@ IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
 
 # 2. Masovni regex za korijene reči
 STEMS_REGEX = re.compile(r'\b(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')([a-zA-ZčćžšđČĆŽŠĐ]*)\b', re.IGNORECASE)
+# Dodati na vrh koda kod ostalih regexa
+IZUZECI_IMENA_REGEX = re.compile(r'^(' + '|'.join(re.escape(k) for k in IMENA_IZUZECI_KORIJENI) + r')', re.IGNORECASE)
+
+# Dodaj ovo gore kod ostalih regexa:
+IZUZECI_IMENA_REGEX = re.compile(r'^(' + '|'.join(re.escape(k) for k in IMENA_IZUZECI_KORIJENI) + r')', re.IGNORECASE)
 
 
 def skini_dz(tekst):
@@ -950,8 +954,10 @@ def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
     if "e" not in r_low: return rijec
 
-    if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
+    # Ubrzana provjera izuzetaka preko regexa umjesto 'any' petlje
+    if (rijec.istitle() or rijec.isupper()) and IZUZECI_IMENA_REGEX.match(r_low):
         return rijec
+
 
     if r_low in EXACT:
         return rijec if (rijec.isupper() and not is_start) else _sacuvaj_velika_slova(rijec, EXACT[r_low])
@@ -1080,20 +1086,23 @@ def zamijeni_rijeci(tekst):
     je_cirilica = sadrzi_cirilicu(tekst)
     trenutni_tekst = cirilica_u_latinicu(tekst) if je_cirilica else tekst
     
-    
+    # 1. Zamjena fraza odjednom nad cijelim tekstom (Ovo radi brzo u C-u)
     for pattern, fraza, zamjena in KOMPAJLIRANE_FRAZE:
         trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
 
     novi_djelovi = []
     
+    # 2. Dijeljenje na rečenice/pasuse
     for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
         if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
             novi_djelovi.append(dio)
         else:
-            novi_djelovi.append(procesiraj_recenicu(dio, trenutni_tekst))
+            # OPTIMIZACIJA: Prosljeđujemo 'dio' (rečenicu) kao predložak teksta umesto cijelog fajla!
+            novi_djelovi.append(procesiraj_recenicu(dio, dio))
                 
     tekst_ijekavski = "".join(novi_djelovi)
     return latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski
+
 
 
 
