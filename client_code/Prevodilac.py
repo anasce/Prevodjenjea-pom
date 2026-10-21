@@ -1068,28 +1068,40 @@ def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
     trenutna = tekst
-    for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
-        def _sub_fraza(match):
-            izv = match.group(0)
-            je_cir = any('\u0400' <= c <= '\u04FF' for c in izv)
-            ima_dz_fr = any(c in izv for c in 'čćžšđČĆŽŠĐ')
-            lat_zam = _zamijeni_frazu_match(match, fraza, zamjena)
-            if je_cir: return latinica_u_cirilicu(lat_zam)
-            return skini_dz(lat_zam) if not ima_dz_fr else lat_zam
-        trenutna = pattern.sub(_sub_fraza, trenutna)
-
+    for fraza, zamjena in STEM_FRAZE.items():
+        if fraza in trenutna:
+            trenutna = trenutna.replace(fraza, zamjena)
+            
     nova_linija_djelovi = []
-    for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF\n]+)', trenutna):
-        if not dio: continue
-        if dio == '\n':
+    for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', trenutna):
+        if not dio or not re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+$', dio):
             nova_linija_djelovi.append(dio)
             continue
             
         je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
         ima_dz = any(c in dio for c in 'čćžšđČĆŽŠĐ')
-        trenutni_tekst = cirilica_u_latinicu(dio) if je_cirilica else dio
         
-        tekst_ijekavski = procesiraj_recenicu(trenutni_tekst, trenutni_tekst)
+        rijec_lat = cirilica_u_latinicu(dio) if je_cirilica else dio
+        r_low = rijec_lat.lower()
+        
+        if r_low in EXACT:
+            tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, EXACT[r_low])
+        elif r_low in STEMS:
+            tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, STEMS[r_low])
+        elif r_low in BRZI_KONTEKST:
+            tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, BRZI_KONTEKST[r_low]['grupa2'][r_low])
+        else:
+            match = STEMS_REGEX.search(r_low)
+            if match:
+                korijen = match.group(1)
+                idx = r_low.find(korijen)
+                prefiks = rijec_lat[:idx]
+                sufiks = rijec_lat[idx + len(korijen):]
+                zamjena = STEMS[korijen]
+                tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], zamjena) + sufiks
+            else:
+                tekst_ijekavski = rijec_lat
+                
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
         nova_linija_djelovi.append(izlaz)
         
