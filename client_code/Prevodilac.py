@@ -8,11 +8,6 @@ import anvil.server
 
 
 
-
-
-
-
-
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -887,7 +882,7 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse
 
 
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
-IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
+IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slepč", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
 IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
 # --- OPTIMIZACIJA 1: INDEXIRANJE KONTEKST_MAPE U O(1) RJEČNIK ---
 BRZI_KONTEKST = {}
@@ -975,24 +970,44 @@ def a_rijec(rijec, is_start, okolni_tekst):
         return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
 
     # --- DRASTIČNO UBRZANJE: Izbjegavanje KORIJENI_REGEX.search ---
+    prefiksi = ['pred', 'raz', 'pri', 'pre', 'pro', 'nad', 'pod', 'ob', 'za', 'do', 'na', 'iz', 'su', 'od']
+    r_low_obradjena = r_low
+    odseceni_prefiks = ""
+    
+    for p in prefiksi:
+        if r_low.startswith(p) and len(r_low) > len(p) + 2:
+            odseceni_prefiks = r_low[:len(p)]
+            r_low_obradjena = r_low[len(p):]
+            break
+
     korijen = None
-    for l in range(min(len(r_low), 15), 3, -1):
-        pod_str = r_low[:l]
+    for l in range(min(len(r_low_obradjena), 15), 3, -1):
+        pod_str = r_low_obradjena[:l]
         if pod_str in STEMS:
-            korijen = pod_str; break
+            korijen = pod_str
+            break
             
     if korijen:
-        if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-        idx = 0
-        if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): 
+        idx = r_low.find(korijen)
+        if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: 
             return rijec
-        sufiks = r_low[len(korijen):]
-        if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
-            baza = STEMS[korijen]
+            
+        prefiks_komplet = rijec[:idx]
+        sufiks = rijec[idx + len(korijen):]
+        sufiks_low = r_low[idx + len(korijen):]
+        zamjena = STEMS[korijen]
+        
+        if korijen.endswith("e") and zamjena.endswith("e") and sufiks_low.startswith("o"):
+            baza = zamjena
             for kraj in ["ije", "je"]:
-                if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
-            return _sacuvaj_velika_slova(rijec[:len(korijen) + 1], baza + "io") + rijec[len(korijen) + 1:]
-        return _sacuvaj_velika_slova(rijec[:len(korijen)], STEMS[korijen]) + rijec[len(korijen):]
+                if baza.endswith(kraj): 
+                    baza = baza[:-len(kraj)]
+                    break
+            sufiks = _sacuvaj_velika_slova(rijec[idx + len(korijen):idx + len(korijen) + 1], "io") + rijec[idx + len(korijen) + 1:]
+            return prefiks_komplet + _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], baza) + sufiks
+            
+        return prefiks_komplet + _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], zamjena) + sufiks
+
 
     return rijec
 
