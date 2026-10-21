@@ -1073,39 +1073,27 @@ def zamijeni_rijeci(tekst):
             izv = match.group(0)
             je_cir = any('\u0400' <= c <= '\u04FF' for c in izv)
             ima_dz_fr = any(c in izv for c in 'čćžšđČĆŽŠĐ')
-            lat_isj = cirilica_u_latinicu(izv) if je_cir else izv
             lat_zam = _zamijeni_frazu_match(match, fraza, zamjena)
             if je_cir: return latinica_u_cirilicu(lat_zam)
             return skini_dz(lat_zam) if not ima_dz_fr else lat_zam
         trenutna = pattern.sub(_sub_fraza, trenutna)
 
-    procesuirane_linije = []
-    for linija in trenutna.splitlines(keepends=True):
-        if not linija.strip():
-            procesuirane_linije.append(linija)
+    nova_linija_djelovi = []
+    for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF\n]+)', trenutna):
+        if not dio: continue
+        if dio == '\n':
+            nova_linija_djelovi.append(dio)
             continue
             
-        nova_linija_djelovi = []
-        for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', linija):
-            if not dio: continue
-            je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
-            ima_dz = any(c in dio for c in 'čćžšđČĆŽŠĐ')
-            trenutni_tekst = cirilica_u_latinicu(dio) if je_cirilica else dio
-            
-            novi_pod_djelovi = []
-            for recenica_dio in re.split(r'([.!?\n]+)', trenutni_tekst):
-                if not recenica_dio.strip() or re.match(r'^[...!?\n]+$', recenica_dio):
-                    novi_pod_djelovi.append(recenica_dio)
-                else:
-                    novi_pod_djelovi.append(procesiraj_recenicu(recenica_dio, trenutni_tekst))
-                    
-            tekst_ijekavski = "".join(novi_pod_djelovi)
-            izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
-            nova_linija_djelovi.append(izlaz)
-            
-        procesuirane_linije.append("".join(nova_linija_djelovi))
+        je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
+        ima_dz = any(c in dio for c in 'čćžšđČĆŽŠĐ')
+        trenutni_tekst = cirilica_u_latinicu(dio) if je_cirilica else dio
         
-    return "".join(procesuirane_linije)
+        tekst_ijekavski = procesiraj_recenicu(trenutni_tekst, trenutni_tekst)
+        izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
+        nova_linija_djelovi.append(izlaz)
+        
+    return "".join(nova_linija_djelovi)
 
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
