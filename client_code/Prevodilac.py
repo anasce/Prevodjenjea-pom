@@ -955,7 +955,13 @@ def a_rijec(rijec, is_start, okolni_tekst):
 
     if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
         if not is_start: return rijec
-        if r_low not in STEMS and not any(r_low.startswith(k) and len(k) >= 5 for k in STEMS): return rijec
+        if r_low not in STEMS:
+            je_u_stems = False
+            for l in range(5, min(12, len(r_low) + 1)):
+                if r_low[:l] in STEMS:
+                    je_u_stems = True
+                    break
+            if not je_u_stems: return rijec
 
     if r_low in EXACT:
         return rijec if (rijec.isupper() and not is_start) else _sacuvaj_velika_slova(rijec, EXACT[r_low])
@@ -988,8 +994,6 @@ def a_rijec(rijec, is_start, okolni_tekst):
             
         zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
         return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
-
-    return rijec
 
     return rijec
 
