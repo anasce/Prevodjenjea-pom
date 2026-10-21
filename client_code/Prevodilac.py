@@ -11,6 +11,8 @@ import anvil.server
 
 
 
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -62,6 +64,7 @@ EXACT = {
     'pevac': 'kokot',
     'rekao': 'rekao',
     'rekla': 'rekla',
+    'razne': 'razne',
     'rečju': 'riječju',
     'sreda': 'srijeda',
     'svest': 'svijest',
@@ -130,9 +133,11 @@ EXACT = {
     'beo': 'bijel',
     'bes': 'bijes',
     'ceo': 'cio',
+    'cev': 'cijev',
     'deo': 'dio',
     'dev': 'djev',
     'dve': 'dvije',
+    'gde': 'gdje',
     'lek': 'lijek',
     'lep': 'lijep',
     'leš': 'leš',
@@ -679,30 +684,30 @@ STEMS = {
     'zver': 'zvijer',
     'žele': 'žele',
 
-    'bed': 'bijed',
-    'cep': 'cijep',
-    'cev': 'cijev',
-    'dec': 'djec',
-    'ded': 'djed',
-    'det': 'dijet',
-    'deč': 'dječ',
-    'gde': 'gdje',
-    'hte': 'htje',
-    'len': 'lijen',
-    'les': 'ljes',
-    'lev': 'lijev',
-    'meš': 'mješ',
-    'mle': 'mlje',
-    'pes': 'pijes',
-    'pev': 'pjev',
-    'rek': 'rijek',
-    'ređ': 'rjeđ',
-    'reš': 'rješ',
-    'sen': 'sjen',
-    'seć': 'sjeć',
-    'tel': 'tijel',
-    'ume': 'umje',
-    'čov': 'čovj',
+#    'bed': 'bijed',
+#    'cep': 'cijep',
+#    'cev': 'cijev',
+#    'dec': 'djec',
+#    'ded': 'djed',
+#    'det': 'dijet',
+#    'deč': 'dječ',
+#   'gde': 'gdje',
+#    'hte': 'htje',
+#    'len': 'lijen',
+#    'les': 'ljesaaa',
+#    'lev': 'lijev',
+#    'meš': 'mješ',
+#    'mle': 'mlje',
+#    'pes': 'pijes',
+#    'pev': 'pjev',
+#    'rek': 'rijek',
+#    'ređ': 'rjeđ',
+#    'reš': 'rješ',
+#    'sen': 'sjen',
+#    'seć': 'sjeć',
+#    'tel': 'tijel',
+#    'ume': 'umje',
+#    'čov': 'čovj',
 }
 
 STEM_FRAZE = {
@@ -949,7 +954,8 @@ def a_rijec(rijec, is_start, okolni_tekst):
     if "e" not in r_low: return rijec
 
     if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
-        return rijec
+        if not is_start: return rijec
+        if r_low not in STEMS and not any(r_low.startswith(k) and len(k) >= 5 for k in STEMS): return rijec
 
     if r_low in EXACT:
         return rijec if (rijec.isupper() and not is_start) else _sacuvaj_velika_slova(rijec, EXACT[r_low])
@@ -958,18 +964,15 @@ def a_rijec(rijec, is_start, okolni_tekst):
         if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: return rijec
         return _sacuvaj_velika_slova(rijec, STEMS[r_low])
 
-    # NOVI BRZI LOOK-UP UMJESTO PETLJE
     if r_low in BRZI_KONTEKST:
         m = BRZI_KONTEKST[r_low]
         baza = m['grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['grupa2']
         return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
 
-    # NOVI REGEX MEČ UMJESTO PETLJE KROZ SVE KORIJENE
     match = KORIJENI_REGEX.search(r_low)
     if match:
         korijen = match.group(1)
-        if korijen == r_low: 
-            return _sacuvaj_velika_slova(rijec, STEMS[korijen])
+        if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
             
         idx = r_low.find(korijen)
         if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): 
@@ -987,6 +990,9 @@ def a_rijec(rijec, is_start, okolni_tekst):
         return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
 
     return rijec
+
+    return rijec
+
 def procesiraj_recenicu(recenica, predlozak_tekst):
     # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
     pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
@@ -1086,8 +1092,8 @@ def zamijeni_rijeci(tekst):
     return "".join(procesuirane_linije)
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
-CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','č':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
-LAT_U_CIR_MAPA = {'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ','A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'č','Š':'Ш','š':'ш','w':'њ','Ś':'С́','ś':'с́'}
+CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
+LAT_U_CIR_MAPA = {'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ','A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','w':'w','Ś':'С́','ś':'с́'}
 
 CIR_U_LAT_REGEX = re.compile('|'.join(re.escape(k) for k in CIR_U_LAT_MAPA.keys()))
 LAT_U_CIR_REGEX = re.compile('|'.join(re.escape(k) for k in LAT_U_CIR_MAPA.keys()))
