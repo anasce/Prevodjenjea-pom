@@ -1066,38 +1066,43 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
 
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
+    
+    trenutna = tekst
+    for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
+        for match in list(pattern.finditer(trenutna)):
+            izvorni_isječak = match.group(0)
+            je_cirilica = any('\u0400' <= c <= '\u04FF' for c in izvorni_isječak)
+            ima_dz_fraza = any(c in izvorni_isječak for c in 'čćžšđČĆŽŠĐ')
+            lat_isječak = cirilica_u_latinicu(izvorni_isječak) if je_cirilica else izvorni_isječak
+            lat_zamijenjeno = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), lat_isječak)
+            if je_cirilica:
+                novi_isječak = latinica_u_cirilicu(lat_zamijenjeno)
+            elif not ima_dz_fraza:
+                novi_isječak = skini_dz(lat_zamijenjeno)
+            else:
+                novi_isječak = lat_zamijenjeno
+            trenutna = trenutna.replace(izvorni_isječak, novi_isječak, 1)
+
     procesuirane_linije = []
-    for linija in tekst.splitlines(keepends=True):
+    for linija in trenutna.splitlines(keepends=True):
         if not linija.strip():
             procesuirane_linije.append(linija)
             continue
-        trenutna = linija
-        for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
-            for match in list(pattern.finditer(trenutna)):
-                izvorni_isječak = match.group(0)
-                je_cirilica = any('\u0400' <= c <= '\u04FF' for c in izvorni_isječak)
-                ima_dz_fraza = any(c in izvorni_isječak for c in 'čćžšđČĆŽŠĐ')
-                lat_isječak = cirilica_u_latinicu(izvorni_isječak) if je_cirilica else izvorni_isječak
-                lat_zamijenjeno = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), lat_isječak)
-                if je_cirilica:
-                    novi_isječak = latinica_u_cirilicu(lat_zamijenjeno)
-                elif not ima_dz_fraza:
-                    novi_isječak = skini_dz(lat_zamijenjeno)
-                else:
-                    novi_isječak = lat_zamijenjeno
-                trenutna = trenutna.replace(izvorni_isječak, novi_isječak, 1)
+            
         nova_linija_djelovi = []
-        for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', trenutna):
+        for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', linija):
             if not dio: continue
             je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
             ima_dz = any(c in dio for c in 'čćžšđČĆŽŠĐ')
             trenutni_tekst = cirilica_u_latinicu(dio) if je_cirilica else dio
+            
             novi_pod_djelovi = []
             for recenica_dio in re.split(r'([.!?\n]+)', trenutni_tekst):
                 if not recenica_dio.strip() or re.match(r'^[...!?\n]+$', recenica_dio):
                     novi_pod_djelovi.append(recenica_dio)
                 else:
                     novi_pod_djelovi.append(procesiraj_recenicu(recenica_dio, trenutni_tekst))
+                    
             tekst_ijekavski = "".join(novi_pod_djelovi)
             if je_cirilica:
                 izlaz = latinica_u_cirilicu(tekst_ijekavski)
@@ -1106,7 +1111,9 @@ def zamijeni_rijeci(tekst):
             else:
                 izlaz = tekst_ijekavski
             nova_linija_djelovi.append(izlaz)
+            
         procesuirane_linije.append("".join(nova_linija_djelovi))
+        
     return "".join(procesuirane_linije)
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
