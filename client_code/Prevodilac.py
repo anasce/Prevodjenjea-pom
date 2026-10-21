@@ -11,9 +11,6 @@ import anvil.server
 
 
 
-
-
-
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -923,16 +920,25 @@ def napravi_fleksibilan_regex(riječ):
             return rezultat
 
 # --- OPTIMIZACIJA 3: PRE-KOMPAJLOVANJE FRAZA VAN PETLJE ---
+# --- GLOBALNA INICIJALIZACIJA NA DNU KODA (IZVAN SVIH FUNKCIJA) ---
 PREKOMPAJLOVANE_FRAZE = []
 sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
-for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
+for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x), reverse=True):
     djelovi = fraza.split()
-    regex_djelovi = [napravi_fleksibilan_regex(d) for d in djelovi]
+    regex_djelovi = []
+    for d in djelovi:
+        cisto = skini_dz(d)
+        varijante = [re.escape(d)]
+        if cisto != d:
+            varijante.append(re.escape(cisto))
+        regex_djelovi.append("(" + "|".join(varijante) + ")")
+    
     if fraza in STEM_FRAZE:
         pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*)\b"
     else:
         pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*)".join(regex_djelovi) + r"\b"
     PREKOMPAJLOVANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
+FRAZE_SORTIRANE = sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True)
 
 
 # BRZO: Jedan prolaz kroz tekst za sve korijene
@@ -1075,6 +1081,9 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
         # Mapiranje karaktera za fleksibilan regex koji ignoriše kvačice
 
 
+
+
+# --- MAKSIMALNO UBRZANA FUNKCIJA ZAMIJENI_RIJECI ---
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
@@ -1166,6 +1175,12 @@ def zamijeni_rijeci(tekst):
         is_start = False
         
     return "".join(nova_linija_djelovi)
+          
+        
+ 
+
+      
+          
 
 
 
