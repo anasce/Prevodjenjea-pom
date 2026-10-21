@@ -1069,19 +1069,15 @@ def zamijeni_rijeci(tekst):
     
     trenutna = tekst
     for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
-        for match in list(pattern.finditer(trenutna)):
-            izvorni_isječak = match.group(0)
-            je_cirilica = any('\u0400' <= c <= '\u04FF' for c in izvorni_isječak)
-            ima_dz_fraza = any(c in izvorni_isječak for c in 'čćžšđČĆŽŠĐ')
-            lat_isječak = cirilica_u_latinicu(izvorni_isječak) if je_cirilica else izvorni_isječak
-            lat_zamijenjeno = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), lat_isječak)
-            if je_cirilica:
-                novi_isječak = latinica_u_cirilicu(lat_zamijenjeno)
-            elif not ima_dz_fraza:
-                novi_isječak = skini_dz(lat_zamijenjeno)
-            else:
-                novi_isječak = lat_zamijenjeno
-            trenutna = trenutna.replace(izvorni_isječak, novi_isječak, 1)
+        def _sub_fraza(match):
+            izv = match.group(0)
+            je_cir = any('\u0400' <= c <= '\u04FF' for c in izv)
+            ima_dz_fr = any(c in izv for c in 'čćžšđČĆŽŠĐ')
+            lat_isj = cirilica_u_latinicu(izv) if je_cir else izv
+            lat_zam = _zamijeni_frazu_match(match, fraza, zamjena)
+            if je_cir: return latinica_u_cirilicu(lat_zam)
+            return skini_dz(lat_zam) if not ima_dz_fr else lat_zam
+        trenutna = pattern.sub(_sub_fraza, trenutna)
 
     procesuirane_linije = []
     for linija in trenutna.splitlines(keepends=True):
@@ -1104,17 +1100,13 @@ def zamijeni_rijeci(tekst):
                     novi_pod_djelovi.append(procesiraj_recenicu(recenica_dio, trenutni_tekst))
                     
             tekst_ijekavski = "".join(novi_pod_djelovi)
-            if je_cirilica:
-                izlaz = latinica_u_cirilicu(tekst_ijekavski)
-            elif not ima_dz:
-                izlaz = skini_dz(tekst_ijekavski)
-            else:
-                izlaz = tekst_ijekavski
+            izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
             nova_linija_djelovi.append(izlaz)
             
         procesuirane_linije.append("".join(nova_linija_djelovi))
         
     return "".join(procesuirane_linije)
+
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
 CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
