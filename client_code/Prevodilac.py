@@ -959,8 +959,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
             je_u_stems = False
             for l in range(5, min(12, len(r_low) + 1)):
                 if r_low[:l] in STEMS:
-                    je_u_stems = True
-                    break
+                    je_u_stems = True; break
             if not je_u_stems: return rijec
 
     if r_low in EXACT:
@@ -975,25 +974,25 @@ def a_rijec(rijec, is_start, okolni_tekst):
         baza = m['grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['grupa2']
         return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
 
-    match = KORIJENI_REGEX.search(r_low)
-    if match:
-        korijen = match.group(1)
-        if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
+    # --- DRASTIČNO UBRZANJE: Izbjegavanje KORIJENI_REGEX.search ---
+    korijen = None
+    for l in range(min(len(r_low), 15), 3, -1):
+        pod_str = r_low[:l]
+        if pod_str in STEMS:
+            korijen = pod_str; break
             
-        idx = r_low.find(korijen)
+    if korijen:
+        if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
+        idx = 0
         if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): 
             return rijec
-            
-        sufiks = r_low[idx + len(korijen):]
+        sufiks = r_low[len(korijen):]
         if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
             baza = STEMS[korijen]
             for kraj in ["ije", "je"]:
                 if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
-            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
-            return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
-            
-        zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
-        return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
+            return _sacuvaj_velika_slova(rijec[:len(korijen) + 1], baza + "io") + rijec[len(korijen) + 1:]
+        return _sacuvaj_velika_slova(rijec[:len(korijen)], STEMS[korijen]) + rijec[len(korijen):]
 
     return rijec
 
