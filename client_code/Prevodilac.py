@@ -10,6 +10,10 @@ import anvil.server
 
 
 
+
+
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -920,11 +924,16 @@ def napravi_fleksibilan_regex(riječ):
 
 # --- OPTIMIZACIJA 3: PRE-KOMPAJLOVANJE FRAZA VAN PETLJE ---
 PREKOMPAJLOVANE_FRAZE = []
-for fraza, zamjena in STEM_FRAZE.items():
-    djelovi_fraze = fraza.split()
-    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
+for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
+    djelovi = fraza.split()
+    regex_djelovi = [napravi_fleksibilan_regex(d) for d in djelovi]
+    if fraza in STEM_FRAZE:
+        pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*)\b"
+    else:
+        pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*)".join(regex_djelovi) + r"\b"
     PREKOMPAJLOVANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
+
 
 # BRZO: Jedan prolaz kroz tekst za sve korijene
 STEMS_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')')
@@ -1070,9 +1079,18 @@ def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
     trenutna = tekst
-    for fraza, zamjena in STEM_FRAZE.items():
-        if fraza in trenutna:
-            trenutna = trenutna.replace(fraza, zamjena)
+    for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
+        def _sub_fraza_precizno(match):
+            izv = match.group(0)
+            je_cir = any('\u0400' <= c <= '\u04FF' for c in izv)
+            ima_dz_izv = any(c in izv for c in 'čćžšđČĆŽŠĐ')
+            
+            lat_zam = _zamijeni_frazu_match(match, fraza, zamjena)
+            if je_cir: 
+                return latinica_u_cirilicu(lat_zam)
+            return lat_zam if ima_dz_izv else skini_dz(lat_zam)
+            
+        trenutna = pattern.sub(_sub_fraza_precizno, trenutna)
             
     nova_linija_djelovi = []
     is_start = True
@@ -1148,6 +1166,8 @@ def zamijeni_rijeci(tekst):
         is_start = False
         
     return "".join(nova_linija_djelovi)
+
+
 
 
 
