@@ -970,7 +970,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
         return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
 
     # --- DRASTIČNO UBRZANJE: Izbjegavanje KORIJENI_REGEX.search ---
-    prefiksi = ['pred', 'raz', 'pri', 'pre', 'pro', 'nad', 'pod', 'ob', 'za', 'do', 'na', 'iz', 'su', 'od']
+    prefiksi = [ 'raz', 'pri', 'pre', 'pro', 'nad', 'pod', 'ob', 'za', 'do', 'na', 'iz', 'su', 'od']
     r_low_obradjena = r_low
     odseceni_prefiks = ""
     
@@ -981,10 +981,9 @@ def a_rijec(rijec, is_start, okolni_tekst):
             break
 
     korijen = None
-    for l in range(min(len(r_low_obradjena), 15), 3, -1):
-        pod_str = r_low_obradjena[:l]
-        if pod_str in STEMS:
-            korijen = pod_str
+    for k in STEMS_SORTED:
+        if k in r_low:
+            korijen = k
             break
             
     if korijen:
@@ -997,6 +996,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
         sufiks_low = r_low[idx + len(korijen):]
         zamjena = STEMS[korijen]
         
+        # Logika za pretrp-eo -> pretrp-io
         if korijen.endswith("e") and zamjena.endswith("e") and sufiks_low.startswith("o"):
             baza = zamjena
             for kraj in ["ije", "je"]:
@@ -1008,8 +1008,8 @@ def a_rijec(rijec, is_start, okolni_tekst):
             
         return prefiks_komplet + _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], zamjena) + sufiks
 
-
     return rijec
+
 
 def procesiraj_recenicu(recenica, predlozak_tekst):
     # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
@@ -1111,10 +1111,20 @@ def zamijeni_rijeci(tekst):
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
 CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
-LAT_U_CIR_MAPA = {'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ','A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','w':'w','Ś':'С́','ś':'с́'}
+LAT_U_CIR_MAPA = {
+    'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ',
+    'A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д',
+    'Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и',
+    'J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н',
+    'O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т',
+    'Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц',
+    'Č':'Ч','č':'ч','Š':'Ш','š':'ш','Ś':'С́','ś':'с́','w':'w'
+}
+
 
 CIR_U_LAT_REGEX = re.compile('|'.join(re.escape(k) for k in CIR_U_LAT_MAPA.keys()))
 LAT_U_CIR_REGEX = re.compile('|'.join(re.escape(k) for k in LAT_U_CIR_MAPA.keys()))
+
 
 def cirilica_u_latinicu(tekst):
     return CIR_U_LAT_REGEX.sub(lambda m: CIR_U_LAT_MAPA[m.group(0)], tekst)
