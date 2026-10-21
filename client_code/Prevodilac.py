@@ -8,6 +8,8 @@ import anvil.server
 
 
 
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -1073,9 +1075,16 @@ def zamijeni_rijeci(tekst):
             trenutna = trenutna.replace(fraza, zamjena)
             
     nova_linija_djelovi = []
+    is_start = True
+    
     for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', trenutna):
-        if not dio or not re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+$', dio):
+        if not dio:
+            continue
+            
+        if not re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+$', dio):
             nova_linija_djelovi.append(dio)
+            if any(c in dio for c in ['.', '!', '?', '\n']):
+                is_start = True
             continue
             
         je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
@@ -1084,6 +1093,21 @@ def zamijeni_rijeci(tekst):
         rijec_lat = cirilica_u_latinicu(dio) if je_cirilica else dio
         r_low = rijec_lat.lower()
         
+        if "e" not in r_low:
+            nova_linija_djelovi.append(dio)
+            is_start = False
+            continue
+            
+        if rijec_lat.istitle() or dio.istitle():
+            if r_low in IMENA_IZUZECI_KORIJENI:
+                nova_linija_djelovi.append(dio)
+                is_start = False
+                continue
+            if not is_start and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
+                nova_linija_djelovi.append(dio)
+                is_start = False
+                continue
+        
         if r_low in EXACT:
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, EXACT[r_low])
         elif r_low in STEMS:
@@ -1091,21 +1115,40 @@ def zamijeni_rijeci(tekst):
         elif r_low in BRZI_KONTEKST:
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, BRZI_KONTEKST[r_low]['grupa2'][r_low])
         else:
-            match = STEMS_REGEX.search(r_low)
-            if match:
-                korijen = match.group(1)
+            korijen = None
+            for l in range(min(len(r_low), 15), 3, -1):
+                pod_str = r_low[:l]
+                if pod_str in STEMS:
+                    korijen = pod_str
+                    break
+            
+            if korijen:
                 idx = r_low.find(korijen)
                 prefiks = rijec_lat[:idx]
                 sufiks = rijec_lat[idx + len(korijen):]
                 zamjena = STEMS[korijen]
                 tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], zamjena) + sufiks
             else:
-                tekst_ijekavski = rijec_lat
+                korijen_sredina = None
+                for k in STEMS_SORTED:
+                    if k in r_low:
+                        korijen_sredina = k
+                        break
+                if korijen_sredina:
+                    idx = r_low.find(korijen_sredina)
+                    prefiks = rijec_lat[:idx]
+                    sufiks = rijec_lat[idx + len(korijen_sredina):]
+                    zamjena = STEMS[korijen_sredina]
+                    tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen_sredina)], zamjena) + sufiks
+                else:
+                    tekst_ijekavski = rijec_lat
                 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
         nova_linija_djelovi.append(izlaz)
+        is_start = False
         
     return "".join(nova_linija_djelovi)
+
 
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
