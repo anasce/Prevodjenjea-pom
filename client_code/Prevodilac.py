@@ -721,18 +721,6 @@ STEM_FRAZE = {
     'Bel kuć': 'Bijel kuć',
 }
 
-FRAZE_PATTERNS = []
-sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
-for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
-    pattern = re.compile(r"\b" + re.escape(fraza) + r"\b", re.IGNORECASE)
-    FRAZE_PATTERNS.append((pattern, fraza, zamjena))  # Popravljeno: pakuje 3 vrijednosti
-
-
-STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
-IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
-IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
-
-
 KONTEKST_MAPE = [
     {
         'ekavski': {'sedela', 'sedeli', 'sedeo', 'sedio', 'sede', 'sedu', 'sedi', 'sedog', 'sedoh', 'sedeti'},
@@ -885,10 +873,64 @@ KONTEKST_MAPE = [
 
 ]
 
+
+FRAZE_PATTERNS = []
+sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
+for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
+    pattern = re.compile(r"\b" + re.escape(fraza) + r"\b", re.IGNORECASE)
+    FRAZE_PATTERNS.append((pattern, fraza, zamjena))  # Popravljeno: pakuje 3 vrijednosti
+
+
+STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
+IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slep", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža"]
+IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
+# --- OPTIMIZACIJA 1: INDEXIRANJE KONTEKST_MAPE U O(1) RJEČNIK ---
+BRZI_KONTEKST = {}
+for m in KONTEKST_MAPE:
+    for rjec in m['ekavski']:
+        BRZI_KONTEKST[rjec] = {
+            'kljucevi1': m['kljucevi1'],
+            'grupa1': m['mape_grupa1'],
+            'grupa2': m['mape_grupa2']
+        }
+
+STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
+
+# --- OPTIMIZACIJA 2: MASOVNI REGEX ZA KORIJENE (IZBJEGAVANJE PETLJE) ---
+DOPUŠTENI_KORIJENI = [k for k in STEMS_SORTED if len(k) >= 4 or k in STEMS]
+KORIJENI_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in DOPUŠTENI_KORIJENI) + r')')
+
 def skini_dz(tekst):
     mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
             'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
     return "".join(mape.get(c, c) for c in tekst)
+
+def napravi_fleksibilan_regex(riječ):
+            rezultat = ""
+            mape_slova = {
+                'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
+                'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
+            }
+            for c in riječ:
+                c_cisto = skini_dz(c)
+                rezultat += mape_slova.get(c_cisto, re.escape(c))
+            return rezultat
+
+# --- OPTIMIZACIJA 3: PRE-KOMPAJLOVANJE FRAZA VAN PETLJE ---
+PREKOMPAJLOVANE_FRAZE = []
+for fraza, zamjena in STEM_FRAZE.items():
+    djelovi_fraze = fraza.split()
+    regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
+    pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
+    PREKOMPAJLOVANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
+
+# BRZO: Jedan prolaz kroz tekst za sve korijene
+STEMS_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')')
+
+
+
+
+
 
 
 def _sacuvaj_velika_slova(izv, zam):
@@ -906,7 +948,6 @@ def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
     if "e" not in r_low: return rijec
 
-    # Popravljeno: Više ne gledamo is_start, veliko slovo + koren sa liste = uvek ostaje ime
     if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
         return rijec
 
@@ -917,30 +958,35 @@ def a_rijec(rijec, is_start, okolni_tekst):
         if rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO: return rijec
         return _sacuvaj_velika_slova(rijec, STEMS[r_low])
 
-    for m in KONTEKST_MAPE:
-        if r_low in m['ekavski']:
-            baza = m['mape_grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['mape_grupa2']
-            return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
+    # NOVI BRZI LOOK-UP UMJESTO PETLJE
+    if r_low in BRZI_KONTEKST:
+        m = BRZI_KONTEKST[r_low]
+        baza = m['grupa1'] if any(k in okolni_tekst for k in m['kljucevi1']) else m['grupa2']
+        return _sacuvaj_velika_slova(rijec, baza[r_low]) if r_low in baza else rijec
 
-    for korijen in STEMS_SORTED:
-        if korijen in r_low:
-            if korijen == r_low: return _sacuvaj_velika_slova(rijec, STEMS[korijen])
-            if len(korijen) < 4: continue
-            idx = r_low.find(korijen)
-            if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): continue
+    # NOVI REGEX MEČ UMJESTO PETLJE KROZ SVE KORIJENE
+    match = KORIJENI_REGEX.search(r_low)
+    if match:
+        korijen = match.group(1)
+        if korijen == r_low: 
+            return _sacuvaj_velika_slova(rijec, STEMS[korijen])
             
-            sufiks = r_low[idx + len(korijen):]
-            if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
-                baza = STEMS[korijen]
-                for kraj in ["ije", "je"]:
-                    if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
-                zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
-                return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
-                
-            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
-            return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
-    return rijec
+        idx = r_low.find(korijen)
+        if ((rijec.istitle() or rijec.isupper()) and idx > 0 and not is_start) or (rijec.isupper() and not is_start and rijec in IZUZECI_VELIKO_SLOVO): 
+            return rijec
+            
+        sufiks = r_low[idx + len(korijen):]
+        if korijen.endswith("e") and STEMS[korijen].endswith("e") and sufiks.startswith("o"):
+            baza = STEMS[korijen]
+            for kraj in ["ije", "je"]:
+                if baza.endswith(kraj): baza = baza[:-len(kraj)]; break
+            zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen) + 1], baza + "io")
+            return rijec[:idx] + zamjena + rijec[idx + len(korijen) + 1:]
+            
+        zamjena = _sacuvaj_velika_slova(rijec[idx:idx + len(korijen)], STEMS[korijen])
+        return rijec[:idx] + zamjena + rijec[idx + len(korijen):]
 
+    return rijec
 def procesiraj_recenicu(recenica, predlozak_tekst):
     # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
     pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
@@ -992,65 +1038,65 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
             
     return "".join(novi_djelovi)
         # Mapiranje karaktera za fleksibilan regex koji ignoriše kvačice
-def napravi_fleksibilan_regex(riječ):
-            rezultat = ""
-            mape_slova = {
-                'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
-                'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
-            }
-            for c in riječ:
-                c_cisto = skini_dz(c)
-                rezultat += mape_slova.get(c_cisto, re.escape(c))
-            return rezultat
+
 
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     procesuirane_linije = []
-    
-    # Sigurna detekcija ćirilice preko Unicode opsega (radi stabilno na Anvil serveru)
-    def sadrzi_cirilicu(struna):
-        return any('\u0400' <= c <= '\u04FF' for c in struna)
-
     for linija in tekst.splitlines(keepends=True):
-        tekst_strip = linija.strip()
-        if not tekst_strip:
+        if not linija.strip():
             procesuirane_linije.append(linija)
             continue
-            
-        # Provjera da li linija sadrži ćirilična slova
-        je_cirilica = sadrzi_cirilicu(linija)
-        trenutni_tekst = cirilica_u_latinicu(linija) if je_cirilica else linija
-        
-        # Prolazak kroz STEM_FRAZE sa ignorisanjem kvačica
-        for fraza, zamjena in STEM_FRAZE.items():
-            djelovi_fraze = fraza.split()
-            regex_djelovi = [napravi_fleksibilan_regex(w) for w in djelovi_fraze]
-            pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ]*) ".join(regex_djelovi) + r"([a-zA-ZčćžšđČĆŽŠĐ]*)\b"
-            pattern = re.compile(pattern_str, re.IGNORECASE)
-            trenutni_tekst = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), trenutni_tekst)
-
-        novi_djelovi = []
-        for dio in re.split(r'([.!?\n]+)', trenutni_tekst):
-            if not dio.strip() or re.match(r'^[...!?\n]+$', dio):
-                novi_djelovi.append(dio)
+        trenutna = linija
+        for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
+            for match in list(pattern.finditer(trenutna)):
+                izvorni_isječak = match.group(0)
+                je_cirilica = any('\u0400' <= c <= '\u04FF' for c in izvorni_isječak)
+                ima_dz_fraza = any(c in izvorni_isječak for c in 'čćžšđČĆŽŠĐ')
+                lat_isječak = cirilica_u_latinicu(izvorni_isječak) if je_cirilica else izvorni_isječak
+                lat_zamijenjeno = pattern.sub(lambda m, e=fraza, z=zamjena: _zamijeni_frazu_match(m, e, z), lat_isječak)
+                if je_cirilica:
+                    novi_isječak = latinica_u_cirilicu(lat_zamijenjeno)
+                elif not ima_dz_fraza:
+                    novi_isječak = skini_dz(lat_zamijenjeno)
+                else:
+                    novi_isječak = lat_zamijenjeno
+                trenutna = trenutna.replace(izvorni_isječak, novi_isječak, 1)
+        nova_linija_djelovi = []
+        for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', trenutna):
+            if not dio: continue
+            je_cirilica = any('\u0400' <= c <= '\u04FF' for c in dio)
+            ima_dz = any(c in dio for c in 'čćžšđČĆŽŠĐ')
+            trenutni_tekst = cirilica_u_latinicu(dio) if je_cirilica else dio
+            novi_pod_djelovi = []
+            for recenica_dio in re.split(r'([.!?\n]+)', trenutni_tekst):
+                if not recenica_dio.strip() or re.match(r'^[...!?\n]+$', recenica_dio):
+                    novi_pod_djelovi.append(recenica_dio)
+                else:
+                    novi_pod_djelovi.append(procesiraj_recenicu(recenica_dio, trenutni_tekst))
+            tekst_ijekavski = "".join(novi_pod_djelovi)
+            if je_cirilica:
+                izlaz = latinica_u_cirilicu(tekst_ijekavski)
+            elif not ima_dz:
+                izlaz = skini_dz(tekst_ijekavski)
             else:
-                novi_djelovi.append(procesiraj_recenicu(dio, trenutni_tekst))
-                
-        tekst_ijekavski = "".join(novi_djelovi)
-        procesuirane_linije.append(latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else tekst_ijekavski)
-            
+                izlaz = tekst_ijekavski
+            nova_linija_djelovi.append(izlaz)
+        procesuirane_linije.append("".join(nova_linija_djelovi))
     return "".join(procesuirane_linije)
 
+# --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
+CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','č':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
+LAT_U_CIR_MAPA = {'lj':'љ','nj':'њ','dž':'џ','Lj':'Љ','Nj':'Њ','Dž':'Џ','LJ':'Љ','NJ':'Њ','DŽ':'Џ','A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'č','Š':'Ш','š':'ш','w':'њ','Ś':'С́','ś':'с́'}
 
+CIR_U_LAT_REGEX = re.compile('|'.join(re.escape(k) for k in CIR_U_LAT_MAPA.keys()))
+LAT_U_CIR_REGEX = re.compile('|'.join(re.escape(k) for k in LAT_U_CIR_MAPA.keys()))
 
 def cirilica_u_latinicu(tekst):
-    m = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
-    return "".join(m.get(c, c) for c in tekst)
+    return CIR_U_LAT_REGEX.sub(lambda m: CIR_U_LAT_MAPA[m.group(0)], tekst)
 
 def latinica_u_cirilicu(tekst):
-    for l, c in [('lj','љ'),('nj','њ'),('dž','џ'),('Lj','Љ'),('Nj','Њ'),('Dž','Џ'),('LJ','Љ'),('NJ','Њ'),('DŽ','Џ')]: tekst = tekst.replace(l, c)
-    m = {'A':'А','a':'а','B':'Б','b':'б','V':'В','v':'в','G':'Г','g':'г','D':'Д','d':'д','Đ':'Ђ','đ':'ђ','E':'Е','e':'е','Ž':'Ж','ž':'ж','Z':'З','z':'з','I':'И','i':'и','J':'Ј','j':'ј','K':'К','k':'к','L':'Л','l':'л','M':'М','m':'м','N':'Н','n':'н','O':'О','o':'о','P':'П','p':'п','R':'Р','r':'р','S':'С','s':'с','T':'Т','t':'т','Ć':'Ћ','ć':'ћ','U':'У','u':'у','F':'Ф','f':'ф','H':'Х','h':'х','C':'Ц','c':'ц','Č':'Ч','č':'ч','Š':'Ш','š':'ш','w':'њ','Ś':'С́','ś':'с́'}
-    return "".join(m.get(c, c) for c in tekst)
+    return LAT_U_CIR_REGEX.sub(lambda m: LAT_U_CIR_MAPA[m.group(0)], tekst)
 
 def a_datoteku(ulaz, izlaz):
     if not os.path.isfile(ulaz): print(f"Greška: '{ulaz}'..."); sys.exit(1)
