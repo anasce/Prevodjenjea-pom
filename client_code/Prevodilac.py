@@ -1132,6 +1132,16 @@ def zamijeni_rijeci(tekst):
             is_start = False
             continue
             
+        # Linija 1141 (Sada ima uvučen blok ispod sebe i neće bacati grešku)
+        if any(izuzetak in r_low for izuzetak in IMENA_IZUZECI_KORIJENI):
+            nova_linija_djelovi.append(dio)
+            is_start = False
+            continue
+            
+
+
+
+            
         if rijec_lat.istitle() or dio.istitle():
             if r_low in IMENA_IZUZECI_KORIJENI:
                 nova_linija_djelovi.append(dio)
@@ -1185,6 +1195,7 @@ def zamijeni_rijeci(tekst):
         is_start = False
         
     return "".join(nova_linija_djelovi)
+
 
       
           
