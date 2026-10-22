@@ -9,26 +9,26 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Uklanjamo "card" ulogu kako bi bijelo polje postalo nevidljivo
+    # Gasimo ulogu kartice da uklonimo bijelu pozadinu
     self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # Kreiramo FlowPanel koji poravnava sadržaj udesno
+    # Kreiramo FlowPanel koji poravnava dugme skroz desno
     self.flow_desno = FlowPanel(align="right")
     
-    # Kreiramo plavo dugme - SKLONJEN EMODŽI IZ TEKSTA, ikonica ide lijevo preko fa:bowl-rice
+    # Kreiramo dugme sa provjerenom ikonom i vještačkim prostorom (padding-om) kroz tekst
     self.coffee_lnk = Link(
-        text="Podrži nas",       # Čist tekst bez emodžija koji pravi problem
-        icon="fa:bowl-rice",    # Zvanična ikonica koja se prikazuje sa lijeve strane
-        icon_align="left",      # Drži ikonicu bezbjedno na lijevoj strani dugmeta
-        url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime
+        text="   Podrži nas   ",   # Dodati razmaci sa strana stvaraju siguran prostor da se tekst ne siječe
+        icon="fa:coffee",          # Standardna ikona koja sigurno radi na svim Anvil verzijama
+        icon_align="left",         # Bezbedno postavlja ikonicu levo od teksta
+        url="https://buymeacoffee.com",  # <-- Zamijeni sa svojim korisničkim imenom
         role="button",
         foreground="#ffffff",
-        background="#226096",   # Savršena plava boja koja se slaže sa tvojim dizajnom
+        background="#226096",      # Plava boja koja se idealno slaže sa tvojim E2I dizajnom
         bold=True
     )
     
-    # Slažemo komponente u ispravan raspored
+    # Slažemo elemente nazad u formu
     self.flow_desno.add_component(self.coffee_lnk)
     self.column_panel_1.add_component(self.flow_desno)
     
