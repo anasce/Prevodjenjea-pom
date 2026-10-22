@@ -9,14 +9,14 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Prikazujemo glavni panel ispod rezultata
+    # 1. Uklanjamo "card" ulogu kako bi bijelo polje oko dugmeta postalo potpuno nevidljivo
+    self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # 1. Kreiramo FlowPanel koji se ravna udesno i skuplja sadržaj
-    # (Ovo će spriječiti rastezanje dugmeta)
+    # 2. Kreiramo FlowPanel koji se ravna udesno i skuplja sadržaj
     self.flow_desno = FlowPanel(align="right")
     
-    # 2. Kreiramo plavo dugme sa njegovom prirodnom širinom
+    # 3. Kreiramo plavo dugme sa njegovom prirodnom širinom
     self.coffee_lnk = Link(
         text="Podrži nas 🥣",
         icon="fa:bowl-rice",
@@ -27,10 +27,8 @@ class Form1(Form1Template):
         bold=True
     )
     
-    # 3. Prvo dodajemo dugme u FlowPanel (zadržava minimalnu širinu)
+    # 4. Slažemo komponente
     self.flow_desno.add_component(self.coffee_lnk)
-    
-    # 4. Na kraju, taj FlowPanel dodajemo u tvoj glavni column_panel_1
     self.column_panel_1.add_component(self.flow_desno)
     
 
