@@ -21,7 +21,7 @@ class Form1(Form1Template):
     
     self.coffee_btn = Button(
         text="Podrži nas ",
-        icon="fa:hot-tub",
+        icon="fa:wine-glass",
         icon_align="right",
         role="primary-button",
         bold=True
