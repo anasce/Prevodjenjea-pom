@@ -10,6 +10,20 @@ class Form1(Form1Template):
     self.server_je_budan = False
     self.column_panel_1.visible = False
     
+    # --- PRILAGOĐENO DUGME ZA PODRŠKU (ČINIJA) ---
+    self.coffee_lnk = Link(
+        text="Podrži nas 🥣",
+        icon="fa:bowl-rice",  # Ikona činije koja odlično mijenja kačamak
+        url="https://buymeacoffee.com",  # <-- Ovdje upiši svoje Buy Me a Coffee korisničko ime
+        role="button",
+        foreground="#ffffff",
+        background="#FFDD00",  # Prepoznatljiva Buy Me a Coffee žuta boja
+        bold=True
+    )
+    # Dodajemo ga direktno u osnovnu formu (na dno) kako bi bilo odmah vidljivo
+    self.add_component(self.coffee_lnk)
+    # ----------------------------------------------
+    
 
   @handle("text_area_1", "change")
   def text_area_1_change(self, **event_args):
