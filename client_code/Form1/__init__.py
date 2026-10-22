@@ -9,9 +9,11 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Panel mora biti vidljiv i ne smijemo mu mijenjati ulogu (role)
+    # Isključujemo ulogu kartice da uklonimo bijelu pozadinu
+    self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
+    # Zadržavamo stabilan razmak iznad dugmeta
     self.donji_razmak = Spacer(height=55)
     self.column_panel_1.add_component(self.donji_razmak)
     
