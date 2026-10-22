@@ -22,7 +22,7 @@ class Form1(Form1Template):
     
     # 3. Kreiramo dugme sa VEĆIM I SAVRŠENO JEDNAKIM razmacima sa strana
     self.coffee_lnk = Link(
-        text="   Podrži nas   ",   # Tri razmaka sa obe strane daju veći, a potpuno simetričan prostor
+        text=" Podrži nas ",   # Tri razmaka sa obe strane daju veći, a potpuno simetričan prostor
         icon="fa:coffee",          # Standardna bijela šoljica sa tacnom
         icon_align="right",        # Ikonica se prikazuje IZA natpisa
         url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime ovdje
