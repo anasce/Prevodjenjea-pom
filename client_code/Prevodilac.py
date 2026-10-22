@@ -7,6 +7,8 @@ import anvil.server
 
 
 
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -1132,11 +1134,19 @@ def zamijeni_rijeci(tekst):
             is_start = False
             continue
             
-        # Linija 1141 (Sada ima uvučen blok ispod sebe i neće bacati grešku)
-        if any(izuzetak in r_low for izuzetak in IMENA_IZUZECI_KORIJENI):
-            nova_linija_djelovi.append(dio)
-            is_start = False
-            continue
+        if rijec_lat.istitle() or dio.istitle():
+            if r_low in IMENA_IZUZECI_KORIJENI:
+                nova_linija_djelovi.append(dio)
+                is_start = False
+                continue
+            # --- OVDJE JE SPAS ZA VEROVATNO / VEROVAO ---
+            # Dozvoljavamo blokadu preko startswith izuzetaka SAMO ako riječ NIJE verovatno/verovao/veruje
+            if not is_start and not r_low.startswith("verova") and not r_low.startswith("veruj"):
+                if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
+                    nova_linija_djelovi.append(dio)
+                    is_start = False
+                    continue
+
             
 
 
@@ -1160,42 +1170,49 @@ def zamijeni_rijeci(tekst):
         elif r_low in BRZI_KONTEKST:
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, BRZI_KONTEKST[r_low]['grupa2'][r_low])
         else:
-            # Umjesto for petlje od 15 unazad, provjeravamo direktno pod-stringove 
-            # koristeći brzu pretragu u rječniku STEMS
-            korijen = None
-            len_r_low = len(r_low)
-            for l in range(15 if len_r_low > 15 else len_r_low, 3, -1):
-                pod_str = r_low[:l]
-                if pod_str in STEMS:
-                    korijen = pod_str
-                    break
+            # --- JEDINSTVENO, BRZO I SIGURNO RJEŠENJE ZA PC I ANVIL ---
+            # Umjesto nesigurnog for l in range bloka koji miješa 'vera' i 'verovatno',
+            # koristimo prekompajlirani STEMS_REGEX koji precizno i u jednom koraku nalazi ispravan korijen.
+            match_korijen = STEMS_REGEX.search(r_low)
             
-            if korijen:
-                idx = 0  # Budući da je r_low[:l], indeks je uvijek nula (prefiks)
+            if match_korijen:
+                korijen = match_korijen.group(1)
+                idx = r_low.find(korijen)
                 prefiks = rijec_lat[:idx]
                 sufiks = rijec_lat[idx + len(korijen):]
                 zamjena = STEMS[korijen]
-                tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], zamjena) + sufiks
-            else:
-                # Umjesto spore petlje `for k in STEMS_SORTED: if k in r_low`,
-                # koristimo jedan jedini kompajlirani regex za pronalaženje korijena u sredini riječi
-                match_korijen = KORIJENI_ZA_SREDINU_REGEX.search(r_low)
-                if match_korijen:
-                    korijen_sredina = match_korijen.group(1)
-                    idx = r_low.find(korijen_sredina)
-                    prefiks = rijec_lat[:idx]
-                    sufiks = rijec_lat[idx + len(korijen_sredina):]
-                    zamjena = STEMS[korijen_sredina]
-                    tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen_sredina)], zamjena) + sufiks
+                
+                # Zadržavamo Vašu originalnu logiku za pretrp-eo -> pretrp-io koja je već radila
+                sufiks_low = r_low[idx + len(korijen):]
+                if korijen.endswith("e") and zamjena.endswith("e") and sufiks_low.startswith("o"):
+                    baza = zamjena
+                    for kraj in ["ije", "je"]:
+                        if baza.endswith(kraj): 
+                            baza = baza[:-len(kraj)]
+                            break
+                    sufiks = _sacuvaj_velika_slova(rijec_lat[idx + len(korijen):idx + len(korijen) + 1], "io") + rijec_lat[idx + len(korijen) + 1:]
+                    tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], baza) + sufiks
                 else:
+                    tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], zamjena) + sufiks
+            else:
+                tekst_ijekavski = rijec_lat
+                
+            # --- NA SAMOM KRAJU: ANVIL UKROTITELJ REGEXA ZA PREZIMENA ---
+            # Ako je riječ preživjela sve i klijentski JS u browseru se sprema da je pošalje 
+            # na KORIJENI_ZA_SREDINU_REGEX, ovdje presrećemo Slepčevića ako u sebi sadrži izuzetak.
+            if any(izuzetak in r_low for izuzetak in IMENA_IZUZECI_KORIJENI) and not r_low.startswith("verova") and not r_low.startswith("veruj"):
+                # Ako je PC u pitanju, riječ je već ispravno prevedena iznad kroz STEMS_REGEX, 
+                # pa provjeravamo da li je ostala neprevedena (Slepčević). Ako jeste, branimo je.
+                if r_low == rijec_lat.lower():
                     tekst_ijekavski = rijec_lat
+
+
                 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
         nova_linija_djelovi.append(izlaz)
         is_start = False
         
     return "".join(nova_linija_djelovi)
-
 
       
           
