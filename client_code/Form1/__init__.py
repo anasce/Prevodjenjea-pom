@@ -35,7 +35,7 @@ class Form1(Form1Template):
 
   def otvori_buymeacoffee(self, **event_args):
     import anvil.js
-    anvil.js.window.open("https://buymeacoffee.com", "_blank")
+    anvil.js.window.open("https://gumroad.com", "_blank")
     
 
   @handle("text_area_1", "change")
