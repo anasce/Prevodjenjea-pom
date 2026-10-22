@@ -13,3 +13,15 @@ services:
   server_config: {}
   source: /runtime/services/tables.yml
 startup: {module: Form1, type: form}
+native_libraries: |
+  <script data-name="BMC-Widget" 
+          data-cfasync="false" 
+          src="https://cloudflare.com" 
+          data-id="TVOJE_KORISNICKO_IME" 
+          data-description="Podrži moj rad!" 
+          data-message="Hvala što koristiš prevodilac! Podrži nas ☕" 
+          data-color="#226096" 
+          data-position="Right" 
+          data-x_margin="18" 
+          data-y_margin="18">
+  </script>
