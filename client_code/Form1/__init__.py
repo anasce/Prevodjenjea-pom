@@ -1,3 +1,4 @@
+import random
 from ._anvil_designer import Form1Template
 from anvil import *
 import anvil.server
@@ -9,19 +10,19 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Isključujemo ulogu kartice da uklonimo bijelu pozadinu
     self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # Zadržavamo stabilan razmak iznad dugmeta
     self.donji_razmak = Spacer(height=55)
     self.column_panel_1.add_component(self.donji_razmak)
     
     self.flow_desno = FlowPanel(align="right")
     
+    izabrana_ikona = "fa:coffee" if random.choice([True, False]) else ""
+    
     self.coffee_btn = Button(
         text="Podrži nas ",
-        icon="fa:wine-glass",
+        icon=izabrana_ikona,
         icon_align="right",
         role="primary-button",
         bold=True
