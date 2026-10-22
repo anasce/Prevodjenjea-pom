@@ -13,17 +13,16 @@ class Form1(Form1Template):
     self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # 1. DODAJEMO RAZMAK IZNAD DUGMETA DA GA GURNEMO NIŽE
-    # Možeš promijeniti height=25 na veći broj (npr. 40) ako želiš još niže
+    # 1. Dodajemo razmak iznad dugmeta da ga gurnemo niže
     self.donji_razmak = Spacer(height=25)
     self.column_panel_1.add_component(self.donji_razmak)
     
     # 2. Kreiramo FlowPanel koji poravnava dugme skroz desno
     self.flow_desno = FlowPanel(align="right")
     
-    # 3. Kreiramo dugme sa ikonicom koja je postavljena DESNO od teksta
+    # 3. Kreiramo dugme sa SMANJENIM RAZMAKOM između riječi i ikonice
     self.coffee_lnk = Link(
-        text="   Podrži nas   ",   # Razmaci čuvaju širinu da tekst ne bude odsječen
+        text="   Podrži nas",      # Smanjen prostor na kraju rečenice – ikonica će sada stajati tik uz tekst!
         icon="fa:coffee",          # Standardna bijela šoljica sa tacnom
         icon_align="right",        # Ikonica se prikazuje IZA natpisa
         url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime ovdje
