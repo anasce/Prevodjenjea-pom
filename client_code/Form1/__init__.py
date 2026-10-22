@@ -13,24 +13,22 @@ class Form1(Form1Template):
     self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # Kreiramo FlowPanel koji se ravna udesno
+    # Kreiramo FlowPanel koji poravnava sadržaj udesno
     self.flow_desno = FlowPanel(align="right")
     
-    # Kreiramo plavo dugme sa dodatnim razmakom na kraju teksta ("🥣 ") da ikonica ne bude odsječena
+    # Kreiramo plavo dugme sa ispravnim Anvil parametrima za ikonicu i razmak
     self.coffee_lnk = Link(
-        text="Podrži nas 🥣 ",  # Dodat razmak na kraju da se osigura ivica
+        text="Podrži nas 🥣",
         icon="fa:bowl-rice",
+        icon_align="left",      # Pravilno poravnava ikonicu i dodaje unutrašnji razmak (padding)
         url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime
         role="button",
         foreground="#ffffff",
-        background="#226096",
+        background="#226096",   # Plava boja tvog dizajna
         bold=True
     )
     
-    # Dodajemo mali unutrašnji razmak sa desne strane direktno kroz HTML/CSS stil komponente
-    self.coffee_lnk.style = "padding-right: 12px !important; display: inline-flex; align-items: center;"
-    
-    # Slažemo komponente
+    # Slažemo komponente bez ikakvih spoljnih .style komandi
     self.flow_desno.add_component(self.coffee_lnk)
     self.column_panel_1.add_component(self.flow_desno)
     
