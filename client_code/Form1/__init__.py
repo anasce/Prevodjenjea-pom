@@ -16,19 +16,19 @@ class Form1(Form1Template):
     # Kreiramo FlowPanel koji poravnava sadržaj udesno
     self.flow_desno = FlowPanel(align="right")
     
-    # Kreiramo plavo dugme sa ispravnim Anvil parametrima za ikonicu i razmak
+    # Kreiramo plavo dugme - SKLONJEN EMODŽI IZ TEKSTA, ikonica ide lijevo preko fa:bowl-rice
     self.coffee_lnk = Link(
-        text="Podrži nas 🥣",
-        icon="fa:bowl-rice",
-        icon_align="left",      # Pravilno poravnava ikonicu i dodaje unutrašnji razmak (padding)
+        text="Podrži nas",       # Čist tekst bez emodžija koji pravi problem
+        icon="fa:bowl-rice",    # Zvanična ikonica koja se prikazuje sa lijeve strane
+        icon_align="left",      # Drži ikonicu bezbjedno na lijevoj strani dugmeta
         url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime
         role="button",
         foreground="#ffffff",
-        background="#226096",   # Plava boja tvog dizajna
+        background="#226096",   # Savršena plava boja koja se slaže sa tvojim dizajnom
         bold=True
     )
     
-    # Slažemo komponente bez ikakvih spoljnih .style komandi
+    # Slažemo komponente u ispravan raspored
     self.flow_desno.add_component(self.coffee_lnk)
     self.column_panel_1.add_component(self.flow_desno)
     
