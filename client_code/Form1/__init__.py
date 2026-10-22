@@ -20,9 +20,9 @@ class Form1(Form1Template):
     # 2. Kreiramo FlowPanel koji poravnava dugme skroz desno
     self.flow_desno = FlowPanel(align="right")
     
-    # 3. Kreiramo dugme sa SMANJENIM RAZMAKOM između riječi i ikonice
+    # 3. Kreiramo dugme sa POTPUNO SIMETRIČNIM ivicama bez ručnih razmaka
     self.coffee_lnk = Link(
-        text="   Podrži nas",      # Smanjen prostor na kraju rečenice – ikonica će sada stajati tik uz tekst!
+        text="Podrži nas",         # Čist tekst bez razmaka – Anvil sam pravi simetrične margine!
         icon="fa:coffee",          # Standardna bijela šoljica sa tacnom
         icon_align="right",        # Ikonica se prikazuje IZA natpisa
         url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime ovdje
