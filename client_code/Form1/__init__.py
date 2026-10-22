@@ -9,10 +9,9 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    self.column_panel_1.role = None
+    # Panel mora biti vidljiv i ne smijemo mu mijenjati ulogu (role)
     self.column_panel_1.visible = True
     
-    # Povećana visina razmaka sa 25 na 55 piksela kako bi dugme otišlo niže
     self.donji_razmak = Spacer(height=55)
     self.column_panel_1.add_component(self.donji_razmak)
     
@@ -22,9 +21,7 @@ class Form1(Form1Template):
         text="Podrži nas ",
         icon="fa:coffee",
         icon_align="right",
-        role="filled-button",
-        background="#226096",
-        foreground="#ffffff",
+        role="primary-button",
         bold=True
     )
     self.coffee_btn.set_event_handler("click", self.otvori_buymeacoffee)
