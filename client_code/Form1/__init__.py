@@ -9,24 +9,29 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Omogućavamo da panel ispod rezultata bude vidljiv
+    # Prikazujemo glavni panel ispod rezultata
     self.column_panel_1.visible = True
     
-    # --- PLAVO DUGME PORAVNATO DESNO ---
+    # 1. Kreiramo FlowPanel koji se ravna udesno i skuplja sadržaj
+    # (Ovo će spriječiti rastezanje dugmeta)
+    self.flow_desno = FlowPanel(align="right")
+    
+    # 2. Kreiramo plavo dugme sa njegovom prirodnom širinom
     self.coffee_lnk = Link(
         text="Podrži nas 🥣",
         icon="fa:bowl-rice",
-        url="https://buymeacoffee.com",  # <-- Ovdje upiši svoje korisničko ime
+        url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime
         role="button",
         foreground="#ffffff",
         background="#226096",
         bold=True
     )
     
-    # Dodajemo dugme u panel i eksplicitno mu kažemo da se poravna desno (right)
-    # i da ne zauzima čitavu širinu reda (width=None sprečava rastezanje)
-    self.column_panel_1.add_component(self.coffee_lnk, align="right", width=None)
-    # ------------------------------------
+    # 3. Prvo dodajemo dugme u FlowPanel (zadržava minimalnu širinu)
+    self.flow_desno.add_component(self.coffee_lnk)
+    
+    # 4. Na kraju, taj FlowPanel dodajemo u tvoj glavni column_panel_1
+    self.column_panel_1.add_component(self.flow_desno)
     
 
   @handle("text_area_1", "change")
