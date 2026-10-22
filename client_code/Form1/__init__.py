@@ -8,20 +8,22 @@ class Form1(Form1Template):
   def __init__(self, **properties):
     super().__init__(**properties)
     self.server_je_budan = False
-    self.column_panel_1.visible = False
     
-    # --- PRILAGOĐENO DUGME ZA PODRŠKU (ČINIJA) ---
+    # Omogućavamo da panel ispod rezultata bude vidljiv
+    self.column_panel_1.visible = True
+    
+    # --- PLAVO DUGME ZA PODRŠKU ISPOD REZULTATA ---
     self.coffee_lnk = Link(
         text="Podrži nas 🥣",
         icon="fa:bowl-rice",  # Ikona činije
-        url="https://buymeacoffee.com",  # <-- Upisi svoje korisnicko ime
+        url="https://buymeacoffee.com",  # <-- Ovdje upiši svoje korisničko ime
         role="button",
         foreground="#ffffff",
-        background="#FFDD00",  # Buy Me a Coffee žuta boja
+        background="#226096",  # Prelijepa plava boja koja se slaže sa podnaslovom aplikacije
         bold=True
     )
-    # Dodajemo dugme u actions_panel koji postoji u tvom šablonu
-    self.actions_panel.add_component(self.coffee_lnk)
+    # Dodajemo dugme direktno u panel koji se nalazi ispod text_area_2
+    self.column_panel_1.add_component(self.coffee_lnk)
     # ----------------------------------------------
     
 
