@@ -13,15 +13,15 @@ class Form1(Form1Template):
     # --- PRILAGOĐENO DUGME ZA PODRŠKU (ČINIJA) ---
     self.coffee_lnk = Link(
         text="Podrži nas 🥣",
-        icon="fa:bowl-rice",  # Ikona činije koja odlično mijenja kačamak
-        url="https://buymeacoffee.com",  # <-- Ovdje upiši svoje Buy Me a Coffee korisničko ime
+        icon="fa:bowl-rice",  # Ikona činije
+        url="https://buymeacoffee.com",  # <-- Upisi svoje korisnicko ime
         role="button",
         foreground="#ffffff",
-        background="#FFDD00",  # Prepoznatljiva Buy Me a Coffee žuta boja
+        background="#FFDD00",  # Buy Me a Coffee žuta boja
         bold=True
     )
-    # Dodajemo ga direktno u osnovnu formu (na dno) kako bi bilo odmah vidljivo
-    self.add_component(self.coffee_lnk)
+    # Dodajemo dugme u actions_panel koji postoji u tvom šablonu
+    self.actions_panel.add_component(self.coffee_lnk)
     # ----------------------------------------------
     
 
