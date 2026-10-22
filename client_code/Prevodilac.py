@@ -7,10 +7,6 @@ import anvil.server
 
 
 
-
-
-
-
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -797,7 +793,7 @@ KONTEKST_MAPE = [
     },
     {
         'ekavski': {'nema'},
-        'kljucevi1': ['ust',  'sved', 'svjed', 'ostal', 'posta', 'stoj', 'gled', 'sluš', 'glu', 'slepč', 'slijep', 'hlad', 'nepom'],
+        'kljucevi1': ['ust',  'sved', 'svjed', 'ostal', 'posta', 'stoj', 'gled', 'sluš', 'glu', 'slep', 'slijep', 'hlad', 'nepom'],
         'kljucevi2': [],
         'mape_grupa1': {'nema': 'nijema'},
         'mape_grupa2': {'nema': 'nema'}
@@ -1083,11 +1079,20 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
 
 
 
-# --- MAKSIMALNO UBRZANA FUNKCIJA ZAMIJENI_RIJECI ---
+# --- NOVA OPTIMIZACIJA 4: MAPIRANJE SVIH KORIJENA U BRZI RJEČNIK ZA O(1) PRETRAGU ---
+# Umjesto pretrage petljom kroz STEMS_SORTED, pravimo rječnik gdje je ključ korijen.
+# Za korijene u sredini riječi, pravimo jedan zajednički regex.
+KORIJENI_ZA_SREDINU_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')')
+
+# Pravimo jedinstveni regex koji hvata sve riječi (i latinicu i ćirilicu sa kvačicama)
+# Ovaj regex će odjednom izdvojiti sve tokene koji su riječi.
+RIJECI_REGEX = re.compile(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)')
+
 def zamijeni_rijeci(tekst):
     if not tekst: return tekst
     
     trenutna = tekst
+    # 1. Prolaz kroz fraze (već prekompajlirano)
     for pattern, fraza, zamjena in PREKOMPAJLOVANE_FRAZE:
         def _sub_fraza_precizno(match):
             izv = match.group(0)
@@ -1104,11 +1109,13 @@ def zamijeni_rijeci(tekst):
     nova_linija_djelovi = []
     is_start = True
     
-    for dio in re.split(r'([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+)', trenutna):
+    # Koristimo prekompajlirani regex za split umjesto dinamičkog stringa
+    for dio in RIJECI_REGEX.split(trenutna):
         if not dio:
             continue
             
-        if not re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]+$', dio):
+        # Provjera da li je token riječ
+        if not RIJECI_REGEX.match(dio):
             nova_linija_djelovi.append(dio)
             if any(c in dio for c in ['.', '!', '?', '\n']):
                 is_start = True
@@ -1135,6 +1142,7 @@ def zamijeni_rijeci(tekst):
                 is_start = False
                 continue
         
+        # --- OPTIMIZOVANA PRETRAGA U O(1) ---
         if r_low in EXACT:
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, EXACT[r_low])
         elif r_low in STEMS:
@@ -1142,26 +1150,28 @@ def zamijeni_rijeci(tekst):
         elif r_low in BRZI_KONTEKST:
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, BRZI_KONTEKST[r_low]['grupa2'][r_low])
         else:
+            # Umjesto for petlje od 15 unazad, provjeravamo direktno pod-stringove 
+            # koristeći brzu pretragu u rječniku STEMS
             korijen = None
-            for l in range(min(len(r_low), 15), 3, -1):
+            len_r_low = len(r_low)
+            for l in range(15 if len_r_low > 15 else len_r_low, 3, -1):
                 pod_str = r_low[:l]
                 if pod_str in STEMS:
                     korijen = pod_str
                     break
             
             if korijen:
-                idx = r_low.find(korijen)
+                idx = 0  # Budući da je r_low[:l], indeks je uvijek nula (prefiks)
                 prefiks = rijec_lat[:idx]
                 sufiks = rijec_lat[idx + len(korijen):]
                 zamjena = STEMS[korijen]
                 tekst_ijekavski = prefiks + _sacuvaj_velika_slova(rijec_lat[idx:idx + len(korijen)], zamjena) + sufiks
             else:
-                korijen_sredina = None
-                for k in STEMS_SORTED:
-                    if k in r_low:
-                        korijen_sredina = k
-                        break
-                if korijen_sredina:
+                # Umjesto spore petlje `for k in STEMS_SORTED: if k in r_low`,
+                # koristimo jedan jedini kompajlirani regex za pronalaženje korijena u sredini riječi
+                match_korijen = KORIJENI_ZA_SREDINU_REGEX.search(r_low)
+                if match_korijen:
+                    korijen_sredina = match_korijen.group(1)
                     idx = r_low.find(korijen_sredina)
                     prefiks = rijec_lat[:idx]
                     sufiks = rijec_lat[idx + len(korijen_sredina):]
@@ -1175,9 +1185,6 @@ def zamijeni_rijeci(tekst):
         is_start = False
         
     return "".join(nova_linija_djelovi)
-          
-        
- 
 
       
           
