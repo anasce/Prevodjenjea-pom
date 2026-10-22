@@ -797,7 +797,7 @@ KONTEKST_MAPE = [
     },
     {
         'ekavski': {'nema'},
-        'kljucevi1': ['ust',  'sved', 'svjed', 'ostal', 'posta', 'stoj', 'gled', 'sluš', 'glu', 'slep', 'slijep', 'hlad', 'nepom'],
+        'kljucevi1': ['ust',  'sved', 'svjed', 'ostal', 'posta', 'stoj', 'gled', 'sluš', 'glu', 'slepč', 'slijep', 'hlad', 'nepom'],
         'kljucevi2': [],
         'mape_grupa1': {'nema': 'nijema'},
         'mape_grupa2': {'nema': 'nema'}
