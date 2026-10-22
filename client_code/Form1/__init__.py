@@ -9,22 +9,27 @@ class Form1(Form1Template):
     super().__init__(**properties)
     self.server_je_budan = False
     
-    # Gasimo ulogu kartice da uklonimo bijelu pozadinu
+    # Gasimo ulogu kartice da uklonimo bijelu pozadinu oko dugmeta
     self.column_panel_1.role = None
     self.column_panel_1.visible = True
     
-    # Kreiramo FlowPanel koji poravnava dugme skroz desno
+    # 1. DODAJEMO RAZMAK IZNAD DUGMETA DA GA GURNEMO NIŽE
+    # Možeš promijeniti height=25 na veći broj (npr. 40) ako želiš još niže
+    self.donji_razmak = Spacer(height=25)
+    self.column_panel_1.add_component(self.donji_razmak)
+    
+    # 2. Kreiramo FlowPanel koji poravnava dugme skroz desno
     self.flow_desno = FlowPanel(align="right")
     
-    # Kreiramo dugme sa provjerenom ikonom i vještačkim prostorom (padding-om) kroz tekst
+    # 3. Kreiramo dugme sa ikonicom koja je postavljena DESNO od teksta
     self.coffee_lnk = Link(
-        text="   Podrži nas   ",   # Dodati razmaci sa strana stvaraju siguran prostor da se tekst ne siječe
-        icon="fa:coffee",          # Standardna ikona koja sigurno radi na svim Anvil verzijama
-        icon_align="left",         # Bezbedno postavlja ikonicu levo od teksta
-        url="https://buymeacoffee.com",  # <-- Zamijeni sa svojim korisničkim imenom
+        text="   Podrži nas   ",   # Razmaci čuvaju širinu da tekst ne bude odsječen
+        icon="fa:coffee",          # Standardna bijela šoljica sa tacnom
+        icon_align="right",        # Ikonica se prikazuje IZA natpisa
+        url="https://buymeacoffee.com",  # <-- Unesi svoje korisničko ime ovdje
         role="button",
-        foreground="#ffffff",
-        background="#226096",      # Plava boja koja se idealno slaže sa tvojim E2I dizajnom
+        foreground="#ffffff",      # Bijela boja za tekst i ikonicu
+        background="#226096",      # Plava boja koja prati tvoj dizajn
         bold=True
     )
     
