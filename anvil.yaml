@@ -2,6 +2,9 @@ allow_embedding: false
 correct_dependency_ids: {}
 dependencies: []
 metadata: {description: Ijekavizacija ekavskog teksta, logo_img: 'https://cdn-icons-png.flaticon.com/128/6983/6983445.png', title: Prevođenje}
+title: "Ijekavizacija ekavskog teksta online | Pretvaranje ekavice"
+description: "Besplatan online alat za ijekavizaciju ekavskog teksta. Brzo i jednostavno prebacite tekst iz ekavice u ijekavicu."
+metadata: {logo_img: 'https://cdn-icons-png.flaticon.com/128/6983/6983445.png'}
 name: Clone of Prevođenje ei
 package_name: Prevo_enje_ei
 runtime_options:
