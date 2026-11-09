@@ -18,18 +18,23 @@ class Form1(Form1Template):
     
     self.flow_desno = FlowPanel(align="right")
     
-    izabrana_ikona = random.choice(["fa:coffee", "fa:birthday-cake", "fa:cutlery", "fa:glass", "fa:beer", "fa:wine-glass"])
-
-
-
+    # Napravite listu u kojoj miješate nazive Font Awesome ikona i nazive vaših PNG slika iz Assets-a
+    izbor = random.choice(["fa:coffee", "fa:birthday-cake", "fa:cutlery", "spagete.png", "pirinac.png"])
+    
+    # Ako izabrana stavka završava na .png, tretiramo je kao sliku iz Assets-a
+    if izbor.endswith(".png"):
+      trenutna_ikona = f"_/theme/{izbor}" # Putanja do fajla u Anvil Assets-u
+    else:
+      trenutna_ikona = izbor # Standardna Font Awesome tekstualna ikona
     
     self.coffee_btn = Button(
         text="Podrži nas ",
-        icon=izabrana_ikona,
+        icon=trenutna_ikona,
         icon_align="right",
         role="primary-button",
         bold=True
     )
+
     self.coffee_btn.set_event_handler("click", self.otvori_buymeacoffee)
     
     self.flow_desno.add_component(self.coffee_btn)
