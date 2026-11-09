@@ -18,7 +18,10 @@ class Form1(Form1Template):
     
     self.flow_desno = FlowPanel(align="right")
     
-    izabrana_ikona = "fa:coffee" if random.choice([True, False]) else ""
+    izabrana_ikona = random.choice(["fa:coffee", "fa:birthday-cake", "fa:cutlery", "fa:glass", "fa:beer", "fa:wine-glass"])
+
+
+
     
     self.coffee_btn = Button(
         text="Podrži nas ",
