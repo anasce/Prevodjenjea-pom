@@ -18,24 +18,16 @@ class Form1(Form1Template):
     
     self.flow_desno = FlowPanel(align="right")
     
-      # Miješamo Font Awesome ikone i nazive PNG slika
-    izbor = random.choice(["fa:coffee", "fa:birthday-cake", "fa:cutlery", "spagete.png", "pirinac.png"])
-    
-    # Ako je izabrana slika, pretvaramo je u URLMedia objekat koji Anvil dugme garantovano vidi
-    if izbor.endswith(".png"):
-      trenutna_ikona = URLMedia(f"_/theme/{izbor}")
-    else:
-      trenutna_ikona = izbor
+    izabrana_ikona = random.choice(["fa:coffee",  "fa:glass", "fa:beer", "fa:wine-glass"])
+
     
     self.coffee_btn = Button(
         text="Podrži nas ",
-        icon=trenutna_ikona,
+        icon=izabrana_ikona,
         icon_align="right",
         role="primary-button",
         bold=True
     )
-
-
     self.coffee_btn.set_event_handler("click", self.otvori_buymeacoffee)
     
     self.flow_desno.add_component(self.coffee_btn)
