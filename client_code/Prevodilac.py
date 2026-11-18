@@ -9,7 +9,7 @@ import anvil.server
 
 
 EXACT = {
-    'anae': 'anaes',
+    'anae': 'anaess',
     'razmenama': 'razmjenama',
 
     'bezgrešan': 'bezgriješan',
@@ -1071,7 +1071,7 @@ def a_rijec(rijec, is_start, okolni_tekst):
     r_low = rijec.lower()
     if "e" not in r_low: return rijec
 
-    if (rijec.istitle() or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
+    if (je_veliko_pocetno(rijec) or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
         if not is_start: return rijec
         if r_low not in STEMS:
             je_u_stems = False
@@ -1202,6 +1202,13 @@ EO_IZUZECI = {
     "seo", "sedeo"  # već su pokriveni kroz EXACT ili BRZI_KONTEKST
 }
 
+def je_veliko_pocetno(rijec):
+    if not rijec:
+        return False
+    if len(rijec) == 1:
+        return rijec[0].isupper()
+    return rijec[0].isupper() and rijec[1:].islower()
+
 
 def zamijeni_rijeci(tekst):
     if not tekst:
@@ -1252,7 +1259,7 @@ def zamijeni_rijeci(tekst):
             continue
 
         # Provjera izuzetaka za vlastita imena (važi i na početku i u sredini rečenice)
-        if rijec_lat.istitle() or dio.istitle():
+        if je_veliko_pocetno(rijec_lat):
             if not r_low.startswith("verova") and not r_low.startswith("veruj"):
                 if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
                     nova_linija_djelovi.append(dio)
@@ -1348,8 +1355,9 @@ def zamijeni_rijeci(tekst):
                 else:
                     tekst_ijekavski = rijec_lat
 
-            if not is_start and rijec_lat.istitle() and any(izuzetak in r_low for izuzetak in IMENA_IZUZECI_KORIJENI):
-                tekst_ijekavski = rijec_lat
+            if je_veliko_pocetno(rijec_lat) and any(r_low.startswith(izuzetak) for izuzetak in IMENA_IZUZECI_KORIJENI):
+                 tekst_ijekavski = rijec_lat
+
 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
         nova_linija_djelovi.append(izlaz)
