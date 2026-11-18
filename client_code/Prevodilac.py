@@ -13,7 +13,7 @@ import os
 import re
 
 EXACT = {
-    'anae': 'anaeaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
+    'anae': 'anaeaaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
     'nesvestan': 'nesvjestan', 'verovatan': 'vjerovatan', 'zahtevima': 'zahtjevima',
     'izvestan': 'izvjestan', 'netrezan': 'netrijezan', 'neutešan': 'neutješan',
     'razmenom': 'razmjenom', 'svetlost': 'svjetlost', 'zasedama': 'zasjedama',
