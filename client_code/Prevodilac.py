@@ -1,4 +1,4 @@
-# E2I PREVODILAC - Optimizovan, keširan i 100% kompatibilan sa Anvil/Skulpt okruženjem
+# E2I PREVODILAC Konvertor ekavice u ijekavicu
 #https://gorgeous-small-dog.anvil.app
 import re
 
