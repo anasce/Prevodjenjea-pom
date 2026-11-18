@@ -1249,17 +1249,14 @@ def zamijeni_rijeci(tekst):
             is_start = False
             continue
 
-        # Provjera izuzetaka za vlastita imena
+        # Provjera izuzetaka za vlastita imena (važi i na početku i u sredini rečenice)
         if rijec_lat.istitle() or dio.istitle():
-            if r_low in IMENA_IZUZECI_KORIJENI:
-                nova_linija_djelovi.append(dio)
-                is_start = False
-                continue
-            if not is_start and not r_low.startswith("verova") and not r_low.startswith("veruj"):
+            if not r_low.startswith("verova") and not r_low.startswith("veruj"):
                 if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
                     nova_linija_djelovi.append(dio)
                     is_start = False
                     continue
+
 
         # --- OPTIMIZOVANA PRETRAGA U O(1) SA DIREKTNIM ČITANJEM KONTEKSTA ---
         if r_low in EXACT:
