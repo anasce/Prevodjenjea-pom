@@ -6,6 +6,10 @@ import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
 
+
+
+
+
 EXACT = {
 
     'razmenama': 'razmjenama',
@@ -1256,6 +1260,7 @@ def zamijeni_rijeci(tekst):
                     nova_linija_djelovi.append(dio)
                     is_start = False
                     continue
+
 
 
         # --- OPTIMIZOVANA PRETRAGA U O(1) SA DIREKTNIM ČITANJEM KONTEKSTA ---
