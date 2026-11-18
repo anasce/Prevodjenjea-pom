@@ -8,10 +8,8 @@ import anvil.server
 
 
 
-
-
 EXACT = {
-
+    'anae': 'anaes',
     'razmenama': 'razmjenama',
 
     'bezgrešan': 'bezgriješan',
