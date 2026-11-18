@@ -1,13 +1,15 @@
-#E2I PREVODILAC 17
-#Konvertor ekavice u ijekavicu
-import sys, os
-import re 
-import anvil.server
-#https://gorgeous-small-dog.anvil.app
+# E2I PREVODILAC - Optimizovan, keširan i 100% kompatibilan sa Anvil/Skulpt okruženjem
+import re
 
+try:
+    import sys
+    import os
+    IMA_OS = True
+except ImportError:
+    IMA_OS = False
 
 EXACT = {
-    'anae': 'anaeaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
+    'anae': 'anaeaaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
     'nesvestan': 'nesvjestan', 'verovatan': 'vjerovatan', 'zahtevima': 'zahtjevima',
     'izvestan': 'izvjestan', 'netrezan': 'netrijezan', 'neutešan': 'neutješan',
     'razmenom': 'razmjenom', 'svetlost': 'svjetlost', 'zasedama': 'zasjedama',
@@ -614,19 +616,20 @@ def zamijeni_rijeci(tekst):
 
     return "".join(nova_linija_djelovi)
 
-def a_datoteku(ulaz, izlaz):
-    if not os.path.isfile(ulaz):
-        print(f"Greška: '{ulaz}'...")
-        sys.exit(1)
-    with open(ulaz, encoding="utf-8") as f:
-        t = f.read()
-    with open(izlaz, "w", encoding="utf-8") as f:
-        f.write(zamijeni_rijeci(t))
-    print(f"Završeno: '{ulaz}' -> '{izlaz}'")
+if IMA_OS:
+    def a_datoteku(ulaz, izlaz):
+        if not os.path.isfile(ulaz):
+            print(f"Greška: '{ulaz}'...")
+            sys.exit(1)
+        with open(ulaz, encoding="utf-8") as f:
+            t = f.read()
+        with open(izlaz, "w", encoding="utf-8") as f:
+            f.write(zamijeni_rijeci(t))
+        print(f"Završeno: '{ulaz}' -> '{izlaz}'")
 
-if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        a_datoteku(sys.argv[1], sys.argv[2])
+    if __name__ == "__main__":
+        if len(sys.argv) == 3:
+            a_datoteku(sys.argv[1], sys.argv[2])
 def probudi_server():
     # Ova funkcija namjerno ne radi ništa.
     # Samim tim što je klijent pozove, Anvil mora da podigne Python i učita cijeli ovaj modul u memoriju.
