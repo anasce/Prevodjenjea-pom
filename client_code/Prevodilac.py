@@ -8,13 +8,11 @@ import anvil.server
 
 
 
-
 EXACT = {
-    'anae': 'anaesss',
+    'anae': 'anaea',
     'razmenama': 'razmjenama',
 
     'bezgrešan': 'bezgriješan',
-    'neizbežan': 'neizbježan',
     'nesvestan': 'nesvjestan',
     'verovatan': 'vjerovatan',
     'zahtevima': 'zahtjevima',
@@ -211,6 +209,7 @@ STEMS = {
     'dodeljen': 'dodijeljen',
     'doprinos': 'doprinios',
     'dragocen': 'dragocjen',
+    'izvestan': 'izvjestan',
     'opredeli': 'opredijeli',
     'opredelj': 'opredjelj',
     'petomese': 'petomjese',
@@ -255,6 +254,7 @@ STEMS = {
     'napretk': 'napretk',
     'nasledn': 'nasljedn',
     'neizmer': 'neizmjer',
+    'neizbež': 'neizbjež',
     'neverov': 'nevjerov',
     'obavest': 'obavijest',
     'obavešt': 'obavješt',
@@ -473,6 +473,7 @@ STEMS = {
     'izmer': 'izmjer',
     'izned': 'izned',
     'iznet': 'iznijet',
+    'izves': 'izvjes',
     'izveš': 'izvješ',
     'kamer': 'kamer',
     'karak': 'karak',
@@ -1170,6 +1171,8 @@ def je_veliko_pocetno(rijec):
     if len(rijec) == 1:
         return rijec[0].isupper()
     return rijec[0].isupper() and rijec[1:].islower()
+DOZVOLJENI_VELIKO_TUPLE = tuple(w.lower() for w in IZUZECI_VELIKO_SLOVO)
+IMENA_IZUZECI_TUPLE = tuple(IMENA_IZUZECI_KORIJENI)
 
 
 def zamijeni_rijeci(tekst):
@@ -1194,9 +1197,6 @@ def zamijeni_rijeci(tekst):
     tokeni = RIJECI_REGEX.split(trenutna)
     GRANICNICI_KONTEKSTA = {'.', ';', '!', '?', '\n'}
     GRANICNICI_RECENICE = {'.', '!', '?', '\n'}
-
-    # Pretvaranje u mala slova za pouzdano poređenje prefiksa (npr. "Belil" -> "belil")
-    dozvoljeni_veliko_low = {w.lower() for w in IZUZECI_VELIKO_SLOVO}
 
     nova_linija_djelovi = []
     is_start = True
@@ -1223,11 +1223,13 @@ def zamijeni_rijeci(tekst):
             is_start = False
             continue
 
-        # Provjera izuzetaka za vlastita imena (važi i na početku i u sredini rečenice)
-        je_dozvoljeno_veliko = any(r_low.startswith(d) for d in dozvoljeni_veliko_low)
-        if je_veliko_pocetno(rijec_lat):
+        # Provjera izuzetaka za vlastita imena (izvršava se SAMO ako je prvo slovo veliko)
+        je_veliko = je_veliko_pocetno(rijec_lat)
+        je_dozvoljeno_veliko = False
+        if je_veliko:
+            je_dozvoljeno_veliko = r_low.startswith(DOZVOLJENI_VELIKO_TUPLE)
             if not je_dozvoljeno_veliko and not r_low.startswith("veruj"):
-                if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
+                if r_low.startswith(IMENA_IZUZECI_TUPLE):
                     nova_linija_djelovi.append(dio)
                     is_start = False
                     continue
@@ -1319,7 +1321,7 @@ def zamijeni_rijeci(tekst):
                 else:
                     tekst_ijekavski = rijec_lat
 
-            if je_veliko_pocetno(rijec_lat) and not je_dozvoljeno_veliko and any(r_low.startswith(izuzetak) for izuzetak in IMENA_IZUZECI_KORIJENI):
+            if je_veliko and not je_dozvoljeno_veliko and r_low.startswith(IMENA_IZUZECI_TUPLE):
                 tekst_ijekavski = rijec_lat
 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
