@@ -1,19 +1,13 @@
 #E2I PREVODILAC 17
 #Konvertor ekavice u ijekavicu
-#import sys, os
+import sys, os
 import re 
 import anvil.server
 #https://gorgeous-small-dog.anvil.app
 
 
-
-# E2I PREVODILAC - Optimizovan, keširan i 100% kompatibilan sa Anvil/Skulpt okruženjem
-import sys
-import os
-import re
-
 EXACT = {
-    'anae': 'anaeaaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
+    'anae': 'anaeaa', 'razmenama': 'razmjenama', 'bezgrešan': 'bezgriješan',
     'nesvestan': 'nesvjestan', 'verovatan': 'vjerovatan', 'zahtevima': 'zahtjevima',
     'izvestan': 'izvjestan', 'netrezan': 'netrijezan', 'neutešan': 'neutješan',
     'razmenom': 'razmjenom', 'svetlost': 'svjetlost', 'zasedama': 'zasjedama',
