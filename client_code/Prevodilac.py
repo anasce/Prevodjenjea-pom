@@ -8,8 +8,11 @@ import anvil.server
 
 
 
+
+
+
 EXACT = {
-    'anae': 'anaea',
+    'anae': 'anaeaa',
     'razmenama': 'razmjenama',
 
     'bezgrešan': 'bezgriješan',
@@ -1171,8 +1174,15 @@ def je_veliko_pocetno(rijec):
     if len(rijec) == 1:
         return rijec[0].isupper()
     return rijec[0].isupper() and rijec[1:].islower()
-DOZVOLJENI_VELIKO_TUPLE = tuple(w.lower() for w in IZUZECI_VELIKO_SLOVO)
-IMENA_IZUZECI_TUPLE = tuple(IMENA_IZUZECI_KORIJENI)
+
+
+
+DOZVOLJENI_VELIKO_REGEX = re.compile(
+    r'^(?:' + '|'.join(re.escape(w.lower()) for w in IZUZECI_VELIKO_SLOVO) + r')'
+)
+IMENA_IZUZECI_REGEX = re.compile(
+    r'^(?:' + '|'.join(re.escape(k.lower()) for k in IMENA_IZUZECI_KORIJENI) + r')'
+)
 
 
 def zamijeni_rijeci(tekst):
@@ -1205,7 +1215,6 @@ def zamijeni_rijeci(tekst):
         if not dio:
             continue
 
-        # Provjera da li je token riječ
         if not RIJECI_REGEX.match(dio):
             nova_linija_djelovi.append(dio)
             if any(c in GRANICNICI_RECENICE for c in dio):
@@ -1223,13 +1232,13 @@ def zamijeni_rijeci(tekst):
             is_start = False
             continue
 
-        # Provjera izuzetaka za vlastita imena (izvršava se SAMO ako je prvo slovo veliko)
-        je_veliko = je_veliko_pocetno(rijec_lat)
+        # Brza C-provjera prvog velikog slova + Regex pretraga prefiksa
+        je_veliko = rijec_lat[0].isupper()
         je_dozvoljeno_veliko = False
         if je_veliko:
-            je_dozvoljeno_veliko = r_low.startswith(DOZVOLJENI_VELIKO_TUPLE)
+            je_dozvoljeno_veliko = bool(DOZVOLJENI_VELIKO_REGEX.match(r_low))
             if not je_dozvoljeno_veliko and not r_low.startswith("veruj"):
-                if r_low.startswith(IMENA_IZUZECI_TUPLE):
+                if IMENA_IZUZECI_REGEX.match(r_low):
                     nova_linija_djelovi.append(dio)
                     is_start = False
                     continue
@@ -1242,7 +1251,6 @@ def zamijeni_rijeci(tekst):
         elif r_low in BRZI_KONTEKST:
             m = BRZI_KONTEKST[r_low]
 
-            # Direktno uzimanje do 4 riječi slijeva (zaustavlja se na . ; ! ? \n)
             lijevo = []
             for j in range(i - 1, -1, -1):
                 tok = tokeni[j]
@@ -1257,7 +1265,6 @@ def zamijeni_rijeci(tekst):
                     break
             lijevo.reverse()
 
-            # Direktno uzimanje do 4 riječi sdesna (zaustavlja se na . ; ! ? \n)
             desno = []
             for j in range(i + 1, len(tokeni)):
                 tok = tokeni[j]
@@ -1273,7 +1280,6 @@ def zamijeni_rijeci(tekst):
 
             prozor = lijevo + desno
 
-            # Provjerava početak okolnih riječi i ZADRŽAVA slova sa kvačicama
             ima_kontekst_1 = any(
                 w.startswith(k)
                 for w in prozor
@@ -1283,7 +1289,6 @@ def zamijeni_rijeci(tekst):
             zamjena_rijeci = baza.get(r_low, rijec_lat)
             tekst_ijekavski = _sacuvaj_velika_slova(rijec_lat, zamjena_rijeci)
         else:
-            # Opšte pravilo za glagole na -eo -> -io (npr. leteo -> letio, bledeo -> blijedio)
             if r_low.endswith("eo") and len(r_low) > 3 and r_low not in EO_IZUZECI:
                 osnova = rijec_lat[:-2]
                 match_osnova = STEMS_REGEX.search(osnova.lower())
@@ -1321,7 +1326,7 @@ def zamijeni_rijeci(tekst):
                 else:
                     tekst_ijekavski = rijec_lat
 
-            if je_veliko and not je_dozvoljeno_veliko and r_low.startswith(IMENA_IZUZECI_TUPLE):
+            if je_veliko and not je_dozvoljeno_veliko and IMENA_IZUZECI_REGEX.match(r_low):
                 tekst_ijekavski = rijec_lat
 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
@@ -1329,7 +1334,6 @@ def zamijeni_rijeci(tekst):
         is_start = False
 
     return "".join(nova_linija_djelovi)
-
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
 CIR_U_LAT_MAPA = {'Љ':'Lj','Њ':'Nj','Џ':'Dž','љ':'lj','њ':'nj','џ':'dž','А':'A','а':'a','Б':'B','б':'b','В':'V','в':'v','Г':'G','г':'g','Д':'D','д':'d','Ђ':'Đ','ђ':'đ','Е':'E','е':'e','Ж':'Ž','ж':'ž','З':'Z','з':'z','И':'I','и':'i','Ј':'J','ј':'j','К':'K','к':'k','Л':'L','л':'l','М':'M','м':'m','Н':'N','н':'n','О':'O','о':'o','П':'P','п':'p','Р':'R','р':'r','С':'S','с':'s','Т':'T','т':'t','Ћ':'Ć','ћ':'ć','У':'U','у':'u','Ф':'F','ф':'f','Х':'H','х':'h','Ц':'C','ц':'c','Ч':'Č','ч':'č','Ш':'Š','ш':'š','С́':'Ś','с́':'ś'}
