@@ -8,8 +8,9 @@ import anvil.server
 
 
 
+
 EXACT = {
-    'anae': 'anaess',
+    'anae': 'anaesss',
     'razmenama': 'razmjenama',
 
     'bezgrešan': 'bezgriješan',
@@ -983,16 +984,12 @@ KONTEKST_MAPE = [
 ]
 
 
-FRAZE_PATTERNS = []
-sve_fraze = {**{k: v for k, v in EXACT.items() if " " in k}, **STEM_FRAZE}
-for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True):
-    pattern = re.compile(r"\b" + re.escape(fraza) + r"\b", re.IGNORECASE)
-    FRAZE_PATTERNS.append((pattern, fraza, zamjena))  # Popravljeno: pakuje 3 vrijednosti
-
 
 STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
 IMENA_IZUZECI_KORIJENI = ["vera", "veri", "veru", "vere", "vero", "sedić", "seden", "sedlar", "slepč", "unesk", "cvetk", "penelop", "meri", "penezi", "bela", "beli", "sneža", "lepa"]
-IZUZECI_VELIKO_SLOVO = {"Nemci", "Nemcima", "Nemaca"}
+#riječi koje se ijekaviziraju iako počinju velikim slovom
+IZUZECI_VELIKO_SLOVO = {"nemci", "nemcima", "nemaca", "verova", "belil"}
+
 # --- OPTIMIZACIJA 1: INDEXIRANJE KONTEKST_MAPE U O(1) RJEČNIK ---
 BRZI_KONTEKST = {}
 for m in KONTEKST_MAPE:
@@ -1003,27 +1000,18 @@ for m in KONTEKST_MAPE:
             'grupa2': m['mape_grupa2']
         }
 
-STEMS_SORTED = sorted(STEMS.keys(), key=len, reverse=True)
+
 
 # --- OPTIMIZACIJA 2: MASOVNI REGEX ZA KORIJENE (IZBJEGAVANJE PETLJE) ---
-DOPUŠTENI_KORIJENI = [k for k in STEMS_SORTED if len(k) >= 4 or k in STEMS]
-KORIJENI_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in DOPUŠTENI_KORIJENI) + r')')
+
+
 
 def skini_dz(tekst):
     mape = {'č':'c', 'ć':'c', 'š':'s', 'ž':'z', 'đ':'d', 
             'Č':'C', 'Ć':'C', 'Š':'S', 'Ž':'Z', 'Đ':'D', 'Ś':'S', 'ś':'s'}
     return "".join(mape.get(c, c) for c in tekst)
 
-def napravi_fleksibilan_regex(riječ):
-            rezultat = ""
-            mape_slova = {
-                'c': '[cčć]', 's': '[sšś]', 'z': '[zž]', 'd': '[dđ]',
-                'C': '[CČĆ]', 'S': '[SŠŚ]', 'Z': '[ZŽ]', 'D': '[DĐ]', 'Ś': '[SŠŚ]', 'ś': '[sšś]'
-            }
-            for c in riječ:
-                c_cisto = skini_dz(c)
-                rezultat += mape_slova.get(c_cisto, re.escape(c))
-            return rezultat
+
 
 # --- OPTIMIZACIJA 3: PRE-KOMPAJLOVANJE FRAZA VAN PETLJE ---
 # --- GLOBALNA INICIJALIZACIJA NA DNU KODA (IZVAN SVIH FUNKCIJA) ---
@@ -1044,7 +1032,7 @@ for fraza, zamjena in sorted(sve_fraze.items(), key=lambda x: len(x), reverse=Tr
     else:
         pattern_str = r"\b" + r"([a-zA-ZčćžšđČĆŽŠĐ\u0400-\u04FF]*)".join(regex_djelovi) + r"\b"
     PREKOMPAJLOVANE_FRAZE.append((re.compile(pattern_str, re.IGNORECASE), fraza, zamjena))
-FRAZE_SORTIRANE = sorted(sve_fraze.items(), key=lambda x: len(x[0]), reverse=True)
+
 
 
 # BRZO: Jedan prolaz kroz tekst za sve korijene
@@ -1062,14 +1050,8 @@ def _sacuvaj_velika_slova(izv, zam):
     return "".join(zam[i].upper() if izv[i if i < len(izv) else -1].isupper() else zam[i].lower() for i in range(len(zam)))
 
 
-def stabilno_sjecenje_kvačica(rijec, idx, korijen_len, zamjena):
-    # Pravi Python na serveru ovdje savršeno računa poziciju slova š, č, ć, ž
-    sufiks = rijec[idx + korijen_len:]
-    return rijec[:idx] + zamjena + sufiks
 
-def a_rijec(rijec, is_start, okolni_tekst):
-    r_low = rijec.lower()
-    if "e" not in r_low: return rijec
+
 
     if (je_veliko_pocetno(rijec) or rijec.isupper()) and any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
         if not is_start: return rijec
@@ -1134,25 +1116,6 @@ def a_rijec(rijec, is_start, okolni_tekst):
     return rijec
 
 
-def procesiraj_recenicu(recenica, predlozak_tekst):
-    # Eksplicitno dodata naša slova sa dijakritičkim znacima u regex
-    pattern = r'([a-zA-ZčćžšđČĆŽŠĐ]+)'
-    
-    tokeni = re.split(pattern, recenica)
-    sve_rijeci = [t.lower() for t in tokeni if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', t)]
-    
-    is_start, idx = True, 0
-    for i, tok in enumerate(tokeni):
-        if re.match(r'^[a-zA-ZčćžšđČĆŽŠĐ]+$', tok):
-            kontekst = " ". join(sve_rijeci[max(0, idx - 4): min(len(sve_rijeci), idx + 5)])
-            tokeni[i] = a_rijec(tok, is_start, kontekst)
-            is_start, idx = False, idx + 1
-        elif tok.strip() and any(c in tok for c in ['.', '!', '?', '\n']):
-            is_start = True
-            
-    return "".join(tokeni)
-
-
 
 def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
     pronadjeno = match.group(0)
@@ -1192,7 +1155,6 @@ def _zamijeni_frazu_match(match, korijen_ekavski, korijen_ijekavski):
 # --- NOVA OPTIMIZACIJA 4: MAPIRANJE SVIH KORIJENA U BRZI RJEČNIK ZA O(1) PRETRAGU ---
 # Umjesto pretrage petljom kroz STEMS_SORTED, pravimo rječnik gdje je ključ korijen.
 # Za korijene u sredini riječi, pravimo jedan zajednički regex.
-KORIJENI_ZA_SREDINU_REGEX = re.compile(r'(' + '|'.join(re.escape(k) for k in STEMS_SORTED) + r')')
 
 # Pravimo jedinstveni regex koji hvata sve riječi (i latinicu i ćirilicu sa kvačicama)
 # Ovaj regex će odjednom izdvojiti sve tokene koji su riječi.
@@ -1233,6 +1195,9 @@ def zamijeni_rijeci(tekst):
     GRANICNICI_KONTEKSTA = {'.', ';', '!', '?', '\n'}
     GRANICNICI_RECENICE = {'.', '!', '?', '\n'}
 
+    # Pretvaranje u mala slova za pouzdano poređenje prefiksa (npr. "Belil" -> "belil")
+    dozvoljeni_veliko_low = {w.lower() for w in IZUZECI_VELIKO_SLOVO}
+
     nova_linija_djelovi = []
     is_start = True
 
@@ -1259,14 +1224,13 @@ def zamijeni_rijeci(tekst):
             continue
 
         # Provjera izuzetaka za vlastita imena (važi i na početku i u sredini rečenice)
+        je_dozvoljeno_veliko = any(r_low.startswith(d) for d in dozvoljeni_veliko_low)
         if je_veliko_pocetno(rijec_lat):
-            if not r_low.startswith("verova") and not r_low.startswith("veruj"):
+            if not je_dozvoljeno_veliko and not r_low.startswith("veruj"):
                 if any(r_low.startswith(k) for k in IMENA_IZUZECI_KORIJENI):
                     nova_linija_djelovi.append(dio)
                     is_start = False
                     continue
-
-
 
         # --- OPTIMIZOVANA PRETRAGA U O(1) SA DIREKTNIM ČITANJEM KONTEKSTA ---
         if r_low in EXACT:
@@ -1355,16 +1319,14 @@ def zamijeni_rijeci(tekst):
                 else:
                     tekst_ijekavski = rijec_lat
 
-            if je_veliko_pocetno(rijec_lat) and any(r_low.startswith(izuzetak) for izuzetak in IMENA_IZUZECI_KORIJENI):
-                 tekst_ijekavski = rijec_lat
-
+            if je_veliko_pocetno(rijec_lat) and not je_dozvoljeno_veliko and any(r_low.startswith(izuzetak) for izuzetak in IMENA_IZUZECI_KORIJENI):
+                tekst_ijekavski = rijec_lat
 
         izlaz = latinica_u_cirilicu(tekst_ijekavski) if je_cirilica else (skini_dz(tekst_ijekavski) if not ima_dz else tekst_ijekavski)
         nova_linija_djelovi.append(izlaz)
         is_start = False
 
     return "".join(nova_linija_djelovi)
-
 
 
 # --- OPTIMIZACIJA PREVODA PISMA (JEDAN PROLAZ REGEKSA) ---
